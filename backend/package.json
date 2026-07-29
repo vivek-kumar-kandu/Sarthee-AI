@@ -1,0 +1,82 @@
+{
+  "name": "sarthee-ai-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade scalable backend API for Sarthee AI intelligent travel assistant.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "start:prod": "NODE_ENV=production node src/server.js",
+    "check": "node --check src/app.js && node --check src/server.js",
+    "check:all": "npm run check && npm run lint && npm run format:check",
+    "lint": "eslint src scripts",
+    "lint:fix": "eslint src scripts --fix",
+    "format": "prettier --write \"src/**/*.js\" \"scripts/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"scripts/**/*.js\"",
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "db:reset": "node scripts/reset-db.js",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "deps:update": "npm update",
+    "clean": "node scripts/clean.js"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "sarthee-ai",
+    "travel-assistant",
+    "tourism",
+    "artificial-intelligence",
+    "recommendation-system",
+    "location-based-services",
+    "flutter",
+    "nodejs",
+    "express",
+    "rest-api",
+    "backend",
+    "scalable-api"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
+    "firebase-admin": "^14.2.0",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.8.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "nodemon": "^3.1.14",
+    "pino-pretty": "^13.1.3",
+    "prettier": "^3.9.6"
+  },
+  "directories": {
+    "test": "tests",
+    "documentation": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "directory": "backend"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/sarthee-ai/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/sarthee-ai#readme",
+  "config": {
+    "service": "sarthee-ai-backend"
+  }
+}
