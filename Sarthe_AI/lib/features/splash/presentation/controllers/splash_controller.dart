@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/auth_provider.dart';
-import '../../../auth/state/auth_startup_state.dart';
+import 'package:sarthee_ai/features/auth/auth_provider.dart';
+import 'package:sarthee_ai/features/auth/state/auth_startup_state.dart';
+import '../../domain/splash_loading_steps.dart';
 import '../../domain/splash_state.dart';
 
 /// Splash presentation controller — mirrors auth startup progress.
@@ -37,7 +38,10 @@ class SplashController extends Notifier<SplashState> {
 
     _isInitializing = true;
 
-    state = state.start(message: 'Preparing Sarthee');
+    final initialPhase = ref.read(authStartupProvider).phase;
+    state = state.start(
+      message: SplashLoadingSteps.getStepMessage(initialPhase),
+    );
 
     try {
       final AuthStartupState startup = ref.read(authStartupProvider);
@@ -82,14 +86,16 @@ class SplashController extends Notifier<SplashState> {
       return;
     }
 
+    final message = SplashLoadingSteps.getStepMessage(startup.phase);
+
     if (startup.bootstrapComplete) {
-      state = state.complete(message: startup.stepMessage);
+      state = state.complete(message: message);
       return;
     }
 
     state = state.updateProgress(
       startup.progress,
-      message: startup.stepMessage,
+      message: message,
     );
   }
 
@@ -102,7 +108,7 @@ class SplashController extends Notifier<SplashState> {
       return;
     }
 
-    state = state.prepareRetry(message: 'Retrying startup');
+    state = state.prepareRetry(message: 'Retrying connection...');
 
     final AuthStartupState startup = ref.read(authStartupProvider);
     if (startup.hasError) {
@@ -148,9 +154,13 @@ final splashFailureProvider = Provider<bool>((ref) {
       (startup.hasError && startup.isOffline);
 });
 
-/// Current auth step message for splash UI.
+/// Current auth step message for splash UI mapped via [SplashLoadingSteps].
 final splashStepMessageProvider = Provider<String>((ref) {
-  return ref.watch(authStartupProvider.select((state) => state.stepMessage));
+  final startup = ref.watch(authStartupProvider);
+  if (startup.hasError) {
+    return startup.error ?? "Connection error. Retrying...";
+  }
+  return SplashLoadingSteps.getStepMessage(startup.phase);
 });
 
 /// Auth startup progress for splash UI (0.0 – 1.0).

@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_paths.dart';
+import '../../../core/responsive/app_responsive.dart';
 import '../../auth/auth_provider.dart';
 import '../../auth/widgets/auth_loading_widget.dart';
 import '../domain/entities/profile_entity.dart';
 import '../providers/profile_provider.dart';
 
+/// Sarthee AI Quick Profile Setup Screen (<15 seconds completion target).
+///
+/// Collects only the essential minimum fields for instant app entry:
+/// • Full Name
+/// • Home City
+/// • Preferred Language (English / Hindi)
 class ProfileSetupPage extends ConsumerStatefulWidget {
   const ProfileSetupPage({super.key});
 
@@ -20,523 +26,327 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nameController;
-  late final TextEditingController _bioController;
   late final TextEditingController _cityController;
 
-  String? _gender;
-  String? _language;
-  String? _theme;
-
-  bool _notifications = true;
-
-  DateTime? _dob;
-
+  String _language = "English";
   bool _saving = false;
 
-  static const List<String> _genders = [
-    "Male",
-    "Female",
-    "Other",
-    "Prefer not to say",
-  ];
-
   static const List<String> _languages = ["English", "Hindi"];
-
-  static const List<String> _themes = ["System", "Light", "Dark"];
 
   @override
   void initState() {
     super.initState();
-
     final profile = ref.read(profileProvider).value;
     final authUser = ref.read(authUserProvider);
 
     _nameController = TextEditingController(
       text: profile?.name ?? authUser?.name ?? "",
     );
-
-    _bioController = TextEditingController(text: profile?.profile.bio ?? "");
-
-    _cityController = TextEditingController(text: profile?.location.city ?? "");
-
-    _gender = profile?.profile.gender;
-
+    _cityController = TextEditingController(
+      text: profile?.location.city ?? "",
+    );
     _language = profile?.preferences.language ?? "English";
-
-    _theme = profile?.preferences.theme ?? "System";
-
-    _notifications = profile?.preferences.notifications ?? true;
-
-    if (profile?.profile.dob != null && profile!.profile.dob!.isNotEmpty) {
-      _dob = DateTime.tryParse(profile.profile.dob!);
-    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _bioController.dispose();
     _cityController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dob ?? DateTime(2000),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-    );
+  Future<void> _saveQuickProfile(ProfileEntity currentProfile) async {
+    if (!_formKey.currentState!.validate()) return;
 
-    if (picked != null) {
-      setState(() {
-        _dob = picked;
-      });
-    }
-  }
-
-  Future<void> _save(ProfileEntity profile) async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() {
-      _saving = true;
-    });
-
-    final updated = profile.copyWith(
-      name: _nameController.text.trim(),
-
-      profile: profile.profile.copyWith(
-        bio: _bioController.text.trim(),
-        gender: _gender,
-        dob: _dob?.toIso8601String(),
-        location: _cityController.text.trim(), 
-      ),
-
-      location: profile.location.copyWith(city: _cityController.text.trim()),
-
-      preferences: profile.preferences.copyWith(
-        language: _language,
-        theme: _theme,
-        notifications: _notifications,
-      ),
-    );
+    setState(() => _saving = true);
 
     try {
+      final updated = currentProfile.copyWith(
+        name: _nameController.text.trim(),
+        location: currentProfile.location.copyWith(
+          city: _cityController.text.trim(),
+        ),
+        preferences: currentProfile.preferences.copyWith(
+          language: _language,
+        ),
+      );
+
       await ref.read(profileProvider.notifier).updateProfile(updated);
 
       if (!mounted) return;
 
-      ref.read(authControllerProvider.notifier).markProfileComplete();
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile completed successfully")),
+        const SnackBar(
+          content: Text("Welcome to Sarthee AI! Profile setup complete."),
+          backgroundColor: Color(0xFF0D9488),
+        ),
       );
 
       context.go(RoutePaths.home);
     } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
-    }
-
-    if (mounted) {
-      setState(() {
-        _saving = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Setup failed: $e"),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider);
+    final ThemeData theme = Theme.of(context);
+    final Color primaryColor = const Color(0xFF4F46E5);
 
-    return profileAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: AuthLoadingWidget(message: "Loading profile...")),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Quick Setup',
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
       ),
+      body: profileAsync.when(
+        loading: () => const AuthLoadingWidget(),
+        error: (err, stack) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFDC2626)),
+              const SizedBox(height: 12),
+              Text('Unable to load profile data: $err'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.read(profileProvider.notifier).loadProfile(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+        data: (profile) {
+          final effectiveProfile = profile ??
+              ProfileEntity(
+                id: 'temp',
+                firebaseUid: 'temp',
+                email: '',
+                name: _nameController.text,
+                picture: null,
+                role: 'user',
+                profile: const UserProfile(),
+                location: UserLocation(city: _cityController.text),
+                preferences: UserPreferences(language: _language),
+                isActive: true,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+                lastLoginAt: DateTime.now(),
+              );
 
-      error: (error, stack) => Scaffold(
-        appBar: AppBar(title: const Text("Complete Profile")),
-        body: Center(child: Text(error.toString())),
-      ),
+          return SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: AppResponsive.screenPadding(context),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(height: 8),
 
-      data: (profile) {
-        if (profile == null) {
-          return const Scaffold(body: Center(child: Text("Profile not found")));
-        }
+                        // Header Icon Badge
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: primaryColor.withValues(alpha: 0.1),
+                          ),
+                          child: Icon(
+                            Icons.person_pin_circle_rounded,
+                            size: 36,
+                            color: primaryColor,
+                          ),
+                        ),
 
-        return Scaffold(
-          appBar: AppBar(title: const Text("Complete Profile")),
+                        const SizedBox(height: 16),
 
-          body: SafeArea(
-            child: Form(
-              key: _formKey,
+                        Text(
+                          'Let\'s personalize Sarthee AI',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: const Color(0xFF1E293B),
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
 
-              child: Stack(
-                children: [
-                  ListView(
-                    padding: const EdgeInsets.all(20),
+                        const SizedBox(height: 6),
 
-                    children: [
-                      Card(
-                        elevation: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            children: [
-                              Stack(
-                                alignment: Alignment.bottomRight,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 55,
-                                    backgroundImage:
-                                        profile.picture != null &&
-                                            profile.picture!.isNotEmpty
-                                        ? NetworkImage(profile.picture!)
-                                        : null,
-                                    child:
-                                        profile.picture == null ||
-                                            profile.picture!.isEmpty
-                                        ? const Icon(Icons.person, size: 55)
-                                        : null,
-                                  ),
+                        Text(
+                          'Enter 3 quick details to unlock your travel experience in seconds',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF64748B),
+                            fontSize: 14,
+                          ),
+                        ),
 
-                                  FloatingActionButton.small(
-                                    heroTag: "profile_avatar",
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Profile photo upload will be available soon.",
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: const Icon(Icons.camera_alt),
-                                  ),
-                                ],
+                        const SizedBox(height: 12),
+
+                        // Star Divider: ──── ✦ ────
+                        Opacity(
+                          opacity: 0.40,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              SizedBox(
+                                width: 44,
+                                child: Divider(thickness: 1.5, color: primaryColor),
                               ),
-
-                              const SizedBox(height: 20),
-
-                              Text(
-                                profile.email,
-                                style: Theme.of(context).textTheme.bodyMedium,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Icon(Icons.star_rounded, size: 10, color: primaryColor),
+                              ),
+                              SizedBox(
+                                width: 44,
+                                child: Divider(thickness: 1.5, color: primaryColor),
                               ),
                             ],
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 28),
 
-                      Card(
-                        elevation: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Personal Information",
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
+                        // 1. Full Name Input
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            labelText: 'Full Name',
+                            hintText: 'Enter your full name',
+                            prefixIcon: const Icon(Icons.person_outline_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Full name required';
+                            return null;
+                          },
+                        ),
 
-                              const SizedBox(height: 20),
+                        const SizedBox(height: 18),
 
-                              TextFormField(
-                                controller: _nameController,
-                                textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
-                                  labelText: "Full Name",
-                                  prefixIcon: Icon(Icons.person_outline),
-                                  border: OutlineInputBorder(),
+                        // 2. Home City Input
+                        TextFormField(
+                          controller: _cityController,
+                          decoration: InputDecoration(
+                            labelText: 'Home City',
+                            hintText: 'e.g. New Delhi, Mumbai, Jaipur',
+                            prefixIcon: const Icon(Icons.location_city_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Home city required';
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // 3. Preferred Language Selector
+                        DropdownButtonFormField<String>(
+                          initialValue: _language,
+                          decoration: InputDecoration(
+                            labelText: 'Preferred Language',
+                            prefixIcon: const Icon(Icons.translate_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          items: _languages
+                              .map((lang) => DropdownMenuItem<String>(
+                                    value: lang,
+                                    child: Text(lang),
+                                  ))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _language = val);
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Complete & Unlock Button (Pill CTA)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: <BoxShadow>[
+                                BoxShadow(
+                                  color: primaryColor.withValues(alpha: 0.30),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 8),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return "Please enter your full name";
-                                  }
-
-                                  if (value.trim().length < 3) {
-                                    return "Minimum 3 characters required";
-                                  }
-
-                                  return null;
-                                },
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              TextFormField(
-                                controller: _bioController,
-                                minLines: 3,
-                                maxLines: 5,
-                                maxLength: 250,
-                                inputFormatters: [
-                                  LengthLimitingTextInputFormatter(250),
-                                ],
-                                decoration: const InputDecoration(
-                                  labelText: "Bio",
-                                  alignLabelWithHint: true,
-                                  prefixIcon: Icon(Icons.description_outlined),
-                                  border: OutlineInputBorder(),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: _saving ? null : () => _saveQuickProfile(effectiveProfile),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-
-                              const SizedBox(height: 18),
-
-                              DropdownButtonFormField<String>(
-                                initialValue: _gender,
-                                decoration: const InputDecoration(
-                                  labelText: "Gender",
-                                  prefixIcon: Icon(Icons.people_outline),
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: _genders
-                                    .map(
-                                      (gender) => DropdownMenuItem(
-                                        value: gender,
-                                        child: Text(gender),
+                              child: _saving
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
                                       ),
                                     )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _gender = value;
-                                  });
-                                },
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: _pickDate,
-                                child: InputDecorator(
-                                  decoration: const InputDecoration(
-                                    labelText: "Date of Birth",
-                                    prefixIcon: Icon(Icons.cake_outlined),
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  child: Text(
-                                    _dob == null
-                                        ? "Select Date"
-                                        : "${_dob!.day}/${_dob!.month}/${_dob!.year}",
-                                  ),
-                                ),
-                              ),
-                            ],
+                                  : const Text('Complete & Start Exploring →'),
+                            ),
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 24),
-                      Card(
-                        elevation: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Location",
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              TextFormField(
-                                controller: _cityController,
-                                textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
-                                  labelText: "City",
-                                  prefixIcon: Icon(
-                                    Icons.location_city_outlined,
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return "Please enter your city";
-                                  }
-                                  return null;
-                                },
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: const Icon(Icons.my_location),
-                                      title: const Text("Latitude"),
-                                      subtitle: Text(
-                                        profile.location.latitude
-                                                ?.toStringAsFixed(6) ??
-                                            "--",
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: const Icon(Icons.explore),
-                                      title: const Text("Longitude"),
-                                      subtitle: Text(
-                                        profile.location.longitude
-                                                ?.toStringAsFixed(6) ??
-                                            "--",
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Card(
-                        elevation: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Preferences",
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              DropdownButtonFormField<String>(
-                                initialValue: _language,
-                                decoration: const InputDecoration(
-                                  labelText: "Language",
-                                  prefixIcon: Icon(Icons.language),
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: _languages
-                                    .map(
-                                      (language) => DropdownMenuItem(
-                                        value: language,
-                                        child: Text(language),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _language = value;
-                                  });
-                                },
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              DropdownButtonFormField<String>(
-                                initialValue: _theme,
-                                decoration: const InputDecoration(
-                                  labelText: "Theme",
-                                  prefixIcon: Icon(Icons.palette_outlined),
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: _themes
-                                    .map(
-                                      (theme) => DropdownMenuItem(
-                                        value: theme,
-                                        child: Text(theme),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _theme = value;
-                                  });
-                                },
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              SwitchListTile(
-                                contentPadding: EdgeInsets.zero,
-                                value: _notifications,
-                                title: const Text("Enable Notifications"),
-                                subtitle: const Text(
-                                  "Receive updates and travel alerts",
-                                ),
-                                secondary: const Icon(
-                                  Icons.notifications_active,
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _notifications = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton.icon(
-                          icon: const Icon(Icons.check),
-                          label: const Text("Complete Profile"),
-                          onPressed: _saving ? null : () => _save(profile),
-                        ),
-                      ),
-
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-
-                  if (_saving)
-                    Container(
-                      color: Colors.black45,
-                      alignment: Alignment.center,
-                      child: const Card(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 24,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(),
-
-                              SizedBox(height: 16),
-
-                              Text(
-                                "Completing your profile...",
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

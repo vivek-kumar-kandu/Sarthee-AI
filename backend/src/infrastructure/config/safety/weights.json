@@ -1,0 +1,8 @@
+{
+  "lightingWeight": 0.30,
+  "crowdWeight": 0.20,
+  "policePresenceWeight": 0.25,
+  "medicalAccessWeight": 0.15,
+  "cctvWeight": 0.10,
+  "nightSafetyThresholdScore": 65.0
+}

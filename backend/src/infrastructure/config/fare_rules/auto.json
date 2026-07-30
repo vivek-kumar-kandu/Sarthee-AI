@@ -1,0 +1,16 @@
+{
+  "currency": "INR",
+  "privateAuto": {
+    "baseFare": 30.0,
+    "baseDistanceKm": 1.5,
+    "perKmRate": 9.5
+  },
+  "eRickshaw": {
+    "flatFare": 10.0,
+    "maxDistanceKm": 3.0
+  },
+  "sharedAuto": {
+    "baseFare": 15.0,
+    "perKmRate": 4.0
+  }
+}

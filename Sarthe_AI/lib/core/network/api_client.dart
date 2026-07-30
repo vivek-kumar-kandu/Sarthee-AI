@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,24 +7,30 @@ class ApiClient {
   ApiClient._();
 
   static final ApiClient instance = ApiClient._();
+
   /// Override:
   /// flutter run --dart-define=API_BASE_URL=https://sarthee-ai.onrender.com/api/v1
-static String get baseUrl {
-  const String override = String.fromEnvironment('API_BASE_URL');
+  static String get baseUrl {
+    const String override = String.fromEnvironment('API_BASE_URL');
 
-  if (override.isNotEmpty) {
-    return override;
+    if (override.isNotEmpty) {
+      return override;
+    }
+
+    // Production Backend (Render)
+    return 'https://sarthee-ai.onrender.com/api/v1';
   }
 
-  // Production Backend (Render)
-  return 'https://sarthee-ai.onrender.com/api/v1';
-}
   late final Dio dio =
       Dio(
           BaseOptions(
             baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 15),
-            receiveTimeout: const Duration(seconds: 15),
+
+            // Render Free cold start ke liye
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 60),
+            sendTimeout: const Duration(seconds: 60),
+
             headers: const <String, Object>{'Content-Type': 'application/json'},
           ),
         )

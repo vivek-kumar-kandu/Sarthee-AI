@@ -76,6 +76,7 @@ class AuthBootstrapService {
   Future<AuthBootstrapResult> validateSession({
     bool forceRefresh = true,
   }) async {
+    debugPrint("========== VALIDATE_SESSION_CALLED ==========");
     final User? currentUser = _authService.currentUser;
     if (currentUser == null) {
       debugPrint('[AuthBootstrap] validateSession() no Firebase user');

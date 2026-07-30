@@ -1,96 +1,115 @@
 import 'package:flutter/material.dart';
 
-/// Startup progress presentation for Sarthee AI.
-///
-/// Supports:
-/// • Determinate progress
-/// • Indeterminate progress
-/// • Status messages
-/// • Percentage display
-/// • Material 3 theming
-/// • Accessibility semantics
-class SplashLoadingIndicator extends StatelessWidget {
+/// Premium startup progress presentation for Sarthee AI featuring a pulse animated progress loader.
+class SplashLoadingIndicator extends StatefulWidget {
   const SplashLoadingIndicator({
-    required this.progress,
+    required this.message,
     super.key,
-    this.message,
-    this.showPercentage = true,
-    this.indeterminate = false,
+    this.progress,
+    this.showSpinner = true,
   });
 
-  final double progress;
-  final String? message;
-  final bool showPercentage;
-  final bool indeterminate;
+  final String message;
+  final double? progress;
+  final bool showSpinner;
 
-  double get _safeProgress => progress.clamp(0.0, 1.0);
+  @override
+  State<SplashLoadingIndicator> createState() => _SplashLoadingIndicatorState();
+}
 
-  int get _percentage => (_safeProgress * 100).round();
+class _SplashLoadingIndicatorState extends State<SplashLoadingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
 
-    final String? normalizedMessage = _normalizeMessage(message);
-
-    final String semanticLabel = normalizedMessage ?? 'Starting Sarthee AI';
-
     return Semantics(
       container: true,
       liveRegion: true,
-      label: semanticLabel,
-      value: indeterminate ? 'Loading' : '$_percentage percent',
+      label: widget.message,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: indeterminate ? null : _safeProgress,
-              minHeight: 5,
-              backgroundColor: colors.surfaceContainerHighest,
-            ),
-          ),
-
-          if (normalizedMessage != null) ...<Widget>[
-            const SizedBox(height: 14),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: Text(
-                normalizedMessage,
-                key: ValueKey<String>(normalizedMessage),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
+          if (widget.showSpinner)
+            ScaleTransition(
+              scale: _pulseAnimation,
+              child: Container(
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.primary.withValues(alpha: 0.08),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: colors.primary.withValues(alpha: 0.15),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+                  backgroundColor: colors.primary.withValues(alpha: 0.15),
                 ),
               ),
             ),
-          ],
-
-          if (showPercentage && !indeterminate) ...<Widget>[
-            const SizedBox(height: 8),
-            Text(
-              '$_percentage%',
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            reverseDuration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.18),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              widget.message,
+              key: ValueKey<String>(widget.message),
               textAlign: TextAlign.center,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: colors.onSurfaceVariant,
-                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.primary.withValues(alpha: 0.90),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.1,
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
-  }
-
-  String? _normalizeMessage(String? value) {
-    final String? trimmed = value?.trim();
-
-    if (trimmed == null || trimmed.isEmpty) {
-      return null;
-    }
-
-    return trimmed;
   }
 }

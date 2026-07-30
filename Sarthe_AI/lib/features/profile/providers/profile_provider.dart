@@ -133,3 +133,9 @@ class ProfileNotifier extends AsyncNotifier<ProfileEntity?> {
 
   Object? get error => state.error;
 }
+
+/// Provider exposing whether current user's profile is complete for router route guards.
+final isProfileCompleteProvider = Provider<bool>((ref) {
+  final ProfileEntity? profile = ref.watch(profileProvider).valueOrNull;
+  return profile != null && profile.name.trim().isNotEmpty;
+});

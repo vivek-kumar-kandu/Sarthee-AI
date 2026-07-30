@@ -145,7 +145,14 @@ abstract final class RouteNames {
   static const String profile = 'profile';
 
   static const String editProfile = 'editProfile';
+
   static const String profileSetup = 'profileSetup';
+
+  static const String completeProfile = 'completeProfile';
+
+  static const String privacyCenter = 'privacyCenter';
+
+  static const String safetyCenter = 'safetyCenter';
 
   // ==========================================================================
   // SETTINGS

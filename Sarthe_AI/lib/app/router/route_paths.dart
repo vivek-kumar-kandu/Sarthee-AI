@@ -60,6 +60,12 @@ abstract final class RoutePaths {
 
   static const String home = '/home';
 
+  static const String explore = '/destinations';
+
+  static const String trips = '/trip-planner';
+
+  static const String ai = '/ai-chat';
+
   // ==========================================================================
   // AI ASSISTANT
   // ==========================================================================
@@ -171,6 +177,12 @@ abstract final class RoutePaths {
   static const String editProfile = '/profile/edit';
 
   static const String profileSetup = '/profile/setup';
+
+  static const String completeProfile = '/profile/complete';
+
+  static const String privacyCenter = '/profile/privacy';
+
+  static const String safetyCenter = '/profile/safety';
 
   static const String settings = '/settings';
 

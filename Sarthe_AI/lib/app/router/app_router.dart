@@ -6,11 +6,15 @@ import '../../features/auth/auth_provider.dart';
 import '../../features/auth/state/auth_startup_state.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/location/pages/location_page.dart';
 import '../../features/profile/pages/edit_profile_page.dart';
+import '../../features/profile/pages/complete_profile_page.dart';
 import '../../features/profile/setup/profile_setup_page.dart';
 import '../../features/profile/pages/profile_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/onboarding/presentation/controllers/onboarding_controller.dart';
 import '../../shared/navigation/app_shell.dart';
 import '../../shared/navigation/navigation_config.dart';
 import 'route_guards.dart';
@@ -18,6 +22,10 @@ import 'route_names.dart';
 import 'route_observer.dart';
 import 'route_paths.dart';
 import '../../features/profile/setup/profile_completion_provider.dart';
+import '../../features/smart_journey/presentation/pages/smart_journey_planner_page.dart';
+import '../../features/smart_journey/presentation/pages/journey_details_page.dart';
+import '../../features/smart_journey/presentation/pages/active_journey_guide_page.dart';
+import '../../features/smart_journey/domain/entities/journey_plan.dart';
 
 // =============================================================================
 // SARTHEE AI — APPLICATION ROUTER
@@ -113,7 +121,7 @@ final routeGuardStateProvider = Provider<RouteGuardState>((ref) {
 
   return RouteGuardState(
     authenticationStatus: authenticationStatus,
-    onboardingCompleted: true,
+    onboardingCompleted: ref.watch(hasCompletedOnboardingProvider),
     isMaintenanceMode: false,
     isUpdateRequired: false,
     isOnline: !startup.isOffline,
@@ -211,12 +219,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // =======================================================================
       // ONBOARDING
       // =======================================================================
-      _buildRoute(
+      GoRoute(
         path: RoutePaths.onboarding,
         name: RouteNames.onboarding,
-        title: 'Welcome to Sarthee AI',
-        subtitle: 'Discover a smarter way to explore',
-        icon: Icons.explore_rounded,
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const OnboardingPage(),
+          );
+        },
       ),
 
       // =======================================================================
@@ -287,6 +298,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // =======================================================================
+      // SMART JOURNEY ENGINE ROUTES
+      // =======================================================================
+      GoRoute(
+        path: '/smart-journey',
+        name: 'smartJourney',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const SmartJourneyPlannerPage(),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/journey-details',
+        name: 'journeyDetails',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          final plan = state.extra as JourneyPlan;
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: JourneyDetailsPage(plan: plan),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/active-trip',
+        name: 'activeTrip',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const ActiveJourneyGuidePage(),
+          );
+        },
+      ),
+
+      // =======================================================================
       // PRIMARY APPLICATION SHELL
       // =======================================================================
       //
@@ -315,12 +363,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             navigatorKey: homeNavigatorKey,
             routes: <RouteBase>[
-              _buildRoute(
+              GoRoute(
                 path: RoutePaths.home,
                 name: RouteNames.home,
-                title: 'Sarthee AI',
-                subtitle: 'Your intelligent travel companion',
-                icon: Icons.home_rounded,
+                pageBuilder: (BuildContext context, GoRouterState state) {
+                  return _buildAdaptivePage<void>(
+                    state: state,
+                    child: const HomePage(),
+                  );
+                },
               ),
             ],
           ),
@@ -440,6 +491,17 @@ StatefulShellBranch(
         return _buildAdaptivePage<void>(
           state: state,
           child: const EditProfilePage(),
+        );
+      },
+    ),
+
+    GoRoute(
+      path: RoutePaths.completeProfile,
+      name: RouteNames.completeProfile,
+      pageBuilder: (BuildContext context, GoRouterState state) {
+        return _buildAdaptivePage<void>(
+          state: state,
+          child: const CompleteProfilePage(),
         );
       },
     ),

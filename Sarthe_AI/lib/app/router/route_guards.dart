@@ -362,24 +362,44 @@ abstract final class RouteGuards {
     }
 
     // ------------------------------------------------------------------------
-    // 5. ONBOARDING
+    // 5. ONBOARDING & AUTHENTICATION FLOW
     // ------------------------------------------------------------------------
 
-    if (!guardState.onboardingCompleted) {
-      final canVisitBeforeOnboarding =
-          path == RoutePaths.splash || path == RoutePaths.onboarding;
+    // If user is authenticated, bypass splash & onboarding -> land on Home / Profile Setup
+    if (guardState.isAuthenticated) {
+      if (path == RoutePaths.splash || path == RoutePaths.onboarding) {
+        if (!guardState.isProfileComplete) {
+          return const RouteGuardResult.redirect(
+            location: RoutePaths.profileSetup,
+            reason: 'Authenticated user with incomplete profile.',
+          );
+        }
+        return const RouteGuardResult.redirect(
+          location: RoutePaths.home,
+          reason: 'Authenticated user bypasses splash & onboarding directly to Home.',
+        );
+      }
+    }
 
-      if (!canVisitBeforeOnboarding) {
+    // Unauthenticated First-Time Launch: Show Onboarding
+    if (!guardState.onboardingCompleted) {
+      if (!guardState.isInitialized) {
+        if (path == RoutePaths.splash) {
+          return const RouteGuardResult.allow();
+        }
+      }
+
+      if (path != RoutePaths.onboarding) {
         return const RouteGuardResult.redirect(
           location: RoutePaths.onboarding,
-          reason: 'Onboarding has not been completed.',
+          reason: 'Bootstrap complete — navigating first-time user to onboarding.',
         );
       }
 
       return const RouteGuardResult.allow();
     }
 
-    // User already completed onboarding.
+    // Unauthenticated Returning Launch (Onboarding Completed): Redirect to Login if on Onboarding
     if (path == RoutePaths.onboarding) {
       return RouteGuardResult.redirect(
         location: _postOnboardingDestination(guardState),

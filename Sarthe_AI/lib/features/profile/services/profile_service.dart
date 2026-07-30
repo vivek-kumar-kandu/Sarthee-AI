@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
 import '../../../core/network/api_client.dart';
@@ -56,9 +58,13 @@ Future<ProfileResponseModel> updateProfile(
   try {
     final body = request.toJson();
 
-    print("========== PROFILE UPDATE REQUEST ==========");
-    print(body);
-    print("===========================================");
+    if (kDebugMode) {
+      developer.log(
+        "Profile update request payload",
+        name: "ProfileService",
+        error: body,
+      );
+    }
 
     final response = await _dio.put(
       _endpoint,

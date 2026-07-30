@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 /// Animated brand mark displayed during Sarthee AI startup.
 ///
-/// The widget is intentionally independent from SplashController so it can
-/// later be reused by onboarding, authentication and branded loading screens.
+/// Pulse Animation:
+/// • Scale: 1.00 -> 1.04 -> 1.00
+/// • Duration: 1400ms repeating
 class SplashLogo extends StatefulWidget {
-  const SplashLogo({super.key, this.size = 112, this.animate = true})
+  const SplashLogo({super.key, this.size = 140, this.animate = true})
     : assert(size > 0, 'SplashLogo size must be greater than zero.');
 
   final double size;
@@ -19,7 +20,6 @@ class _SplashLogoState extends State<SplashLogo>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -27,23 +27,15 @@ class _SplashLogoState extends State<SplashLogo>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
+    _scaleAnimation = Tween<double>(begin: 1.00, end: 1.04).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
 
     if (widget.animate) {
-      _controller.forward();
-    } else {
-      _controller.value = 1;
+      _controller.repeat(reverse: true);
     }
   }
 
@@ -56,9 +48,10 @@ class _SplashLogoState extends State<SplashLogo>
     }
 
     if (widget.animate) {
-      _controller.forward(from: 0);
+      _controller.repeat(reverse: true);
     } else {
-      _controller.value = 1;
+      _controller.stop();
+      _controller.value = 0;
     }
   }
 
@@ -70,33 +63,46 @@ class _SplashLogoState extends State<SplashLogo>
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     final bool reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
-    final Widget logo = Semantics(
-      image: true,
-      label: 'Sarthee AI logo',
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: colors.primaryContainer,
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: colors.shadow.withValues(alpha: 0.12),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.travel_explore_rounded,
-          size: widget.size * 0.48,
-          color: colors.onPrimaryContainer,
+    final Widget logo = Hero(
+      tag: 'sarthee-logo',
+      child: Semantics(
+        image: true,
+        label: 'Sarthee AI logo',
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: const Color(0xFF1E88E5).withValues(alpha: 0.18),
+                blurRadius: 28,
+                spreadRadius: 2,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            'assets/images/logo/sarthee_logo.png',
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: const Color(0xFF0066FF),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.travel_explore_rounded,
+                  color: Colors.white,
+                  size: 56,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -105,9 +111,6 @@ class _SplashLogoState extends State<SplashLogo>
       return logo;
     }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(scale: _scaleAnimation, child: logo),
-    );
+    return ScaleTransition(scale: _scaleAnimation, child: logo);
   }
 }

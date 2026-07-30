@@ -62,6 +62,7 @@ pnpm-debug.log*
 ########################################
 
 **/GoogleService-Info.plist
+**/google-services.json
 
 ########################################
 # Logs

@@ -3,10 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/route_paths.dart';
+import '../../../core/responsive/app_responsive.dart';
 import '../../auth/auth_provider.dart';
+import '../../auth/widgets/auth_loading_widget.dart';
 import '../domain/entities/profile_entity.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/profile_completion_banner.dart';
+import '../widgets/profile_insight_card.dart';
+import '../widgets/profile_passport_card.dart';
+import '../widgets/profile_summary_widget.dart';
 
+/// Main My Profile Screen featuring Travel Passport Card, Completion Banner, & Menu Shortcuts.
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
@@ -18,7 +25,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(profileProvider.notifier).loadProfile();
     });
@@ -28,20 +34,74 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     await ref.read(profileProvider.notifier).refreshProfile();
   }
 
+  Future<void> _showLogoutDialog() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          icon: const Icon(Icons.logout_rounded, color: Color(0xFFDC2626)),
+          title: const Text("Logout"),
+          content: const Text(
+            "Are you sure you want to logout from Sarthee AI?",
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text("Logout"),
+            ),
+          ],
+        );
+      },
+    );
+    if (shouldLogout == true) {
+      try {
+        await ref.read(authControllerProvider.notifier).logout();
+        if (!mounted) return;
+        context.go(RoutePaths.login);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Logout failed: $e")),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider);
     final authUser = ref.watch(authUserProvider);
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text("My Profile"),
+        title: const Text(
+          "My Profile",
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: "Edit Profile",
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF475569)),
             onPressed: () {
               context.push(RoutePaths.editProfile);
             },
@@ -50,176 +110,120 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
+        color: const Color(0xFF4F46E5),
         child: profileAsync.when(
-          loading: () => const _LoadingView(),
+          loading: () => const AuthLoadingWidget(),
           error: (error, stack) => _ErrorView(
             message: error.toString(),
             onRetry: () {
-              ref.read(profileProvider.notifier).loadProfile();
+              ref.read(profileProvider.notifier).loadProfile(forceRefresh: true);
             },
           ),
           data: (profile) {
-            if (profile == null) {
-              return const _EmptyView();
-            }
+            final effectiveProfile = profile ??
+                ProfileEntity(
+                  id: 'temp',
+                  firebaseUid: authUser?.uid ?? 'temp',
+                  email: authUser?.email ?? '',
+                  name: authUser?.name ?? 'Traveler',
+                  picture: null,
+                  role: 'user',
+                  profile: const UserProfile(),
+                  location: const UserLocation(city: 'India'),
+                  preferences: const UserPreferences(language: 'English'),
+                  isActive: true,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                  lastLoginAt: DateTime.now(),
+                );
 
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              children: [
-                _ProfileHeader(
-                  profile: profile,
-                  fallbackName: authUser?.name,
-                  fallbackEmail: authUser?.email,
+            return SafeArea(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
+                padding: AppResponsive.screenPadding(context),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // 1. Travel Passport Header Card
+                        ProfilePassportCard(
+                          profile: effectiveProfile,
+                          onEditPressed: () {
+                            context.push(RoutePaths.editProfile);
+                          },
+                        ),
 
-                const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                _CompletionCard(profile),
+                        // 2. Profile Completion Banner (if < 100%)
+                        ProfileCompletionBanner(
+                          profile: effectiveProfile,
+                          onCompletePressed: () {
+                            context.push(RoutePaths.completeProfile);
+                          },
+                        ),
 
-                const SizedBox(height: 24),
+                        const SizedBox(height: 12),
 
-                _SectionCard(
-                  title: "Account",
-                  icon: Icons.person_outline,
-                  children: [
-                    _InfoTile(
-                      icon: Icons.badge_outlined,
-                      title: "Name",
-                      value: profile.name,
-                    ),
-                    _InfoTile(
-                      icon: Icons.email_outlined,
-                      title: "Email",
-                      value: profile.email,
-                    ),
-                    _InfoTile(
-                      icon: Icons.verified_user_outlined,
-                      title: "Role",
-                      value: profile.role,
-                    ),
-                    _InfoTile(
-                      icon: Icons.circle,
-                      title: "Status",
-                      value: profile.isActive ? "Active" : "Inactive",
-                    ),
-                  ],
-                ),
+                        // 3. Profile Context Insight Card (Actionable tips)
+                        ProfileInsightCard(
+                          profile: effectiveProfile,
+                          onActionPressed: () {
+                            context.push(RoutePaths.completeProfile);
+                          },
+                        ),
 
-                const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                _SectionCard(
-                  title: "Personal Information",
-                  icon: Icons.assignment_ind_outlined,
-                  children: [
-                    _InfoTile(
-                      icon: Icons.cake_outlined,
-                      title: "Date of Birth",
-                      value: profile.profile.dob ?? "Not Set",
-                    ),
-                    _InfoTile(
-                      icon: Icons.person_outline,
-                      title: "Gender",
-                      value: profile.profile.gender ?? "Not Set",
-                    ),
-                    _InfoTile(
-                      icon: Icons.description_outlined,
-                      title: "Bio",
-                      value: profile.profile.bio ?? "No Bio",
-                    ),
-                  ],
-                ),
+                        // 4. Travel Persona & Preference Summary
+                        ProfileSummaryWidget(
+                          profile: effectiveProfile,
+                          onEditPressed: () {
+                            context.push(RoutePaths.completeProfile);
+                          },
+                        ),
 
-                const SizedBox(height: 20),
-                _SectionCard(
-                  title: "Location",
-                  icon: Icons.location_on_outlined,
-                  children: [
-                    _InfoTile(
-                      icon: Icons.location_city_outlined,
-                      title: "City",
-                      value: profile.location.city ?? "Unknown",
-                    ),
-                    _InfoTile(
-                      icon: Icons.my_location_outlined,
-                      title: "Latitude",
-                      value: profile.location.latitude?.toString() ?? "--",
-                    ),
-                    _InfoTile(
-                      icon: Icons.explore_outlined,
-                      title: "Longitude",
-                      value: profile.location.longitude?.toString() ?? "--",
-                    ),
-                  ],
-                ),
+                        // 5. Account Shortcuts Section
+                        _buildSectionTitle(theme, 'Account Shortcuts'),
+                        const SizedBox(height: 10),
+                        _buildMenuTile(
+                          icon: Icons.stars_rounded,
+                          title: 'Complete Travel Persona',
+                          subtitle: 'Travel interests, pace, diet & budget tier',
+                          iconColor: const Color(0xFF0D9488),
+                          onTap: () => context.push(RoutePaths.completeProfile),
+                        ),
+                        _buildMenuTile(
+                          icon: Icons.person_outline_rounded,
+                          title: 'Edit Personal Profile',
+                          subtitle: 'Update name, bio, and location',
+                          onTap: () => context.push(RoutePaths.editProfile),
+                        ),
+                        _buildMenuTile(
+                          icon: Icons.lock_outline_rounded,
+                          title: 'Security & Password',
+                          subtitle: 'Manage authentication settings',
+                          onTap: () {},
+                        ),
+                        _buildMenuTile(
+                          icon: Icons.logout_rounded,
+                          title: 'Logout',
+                          subtitle: 'Sign out from Sarthee AI',
+                          iconColor: const Color(0xFFDC2626),
+                          textColor: const Color(0xFFDC2626),
+                          onTap: _showLogoutDialog,
+                        ),
 
-                const SizedBox(height: 20),
-
-                _SectionCard(
-                  title: "Preferences",
-                  icon: Icons.tune_outlined,
-                  children: [
-                    _InfoTile(
-                      icon: Icons.language_outlined,
-                      title: "Language",
-                      value: profile.preferences.language ?? "Default",
+                        const SizedBox(height: 32),
+                      ],
                     ),
-                    _InfoTile(
-                      icon: Icons.palette_outlined,
-                      title: "Theme",
-                      value: profile.preferences.theme ?? "System",
-                    ),
-                    _InfoTile(
-                      icon: Icons.notifications_active_outlined,
-                      title: "Notifications",
-                      value: (profile.preferences.notifications ?? false)
-                          ? "Enabled"
-                          : "Disabled",
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                _SectionCard(
-                  title: "Account Activity",
-                  icon: Icons.history,
-                  children: [
-                    _InfoTile(
-                      icon: Icons.calendar_today_outlined,
-                      title: "Created",
-                      value: _formatDate(profile.createdAt),
-                    ),
-                    _InfoTile(
-                      icon: Icons.update_outlined,
-                      title: "Last Updated",
-                      value: _formatDate(profile.updatedAt),
-                    ),
-                    _InfoTile(
-                      icon: Icons.login_outlined,
-                      title: "Last Login",
-                      value: profile.lastLoginAt == null
-                          ? "Never"
-                          : _formatDate(profile.lastLoginAt!),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
                   ),
-                  onPressed: () {
-                    context.push(RoutePaths.editProfile);
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text("Edit Profile"),
                 ),
-
-                const SizedBox(height: 16),
-              ],
+              ),
             );
           },
         ),
@@ -227,191 +231,57 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return "${date.day}/${date.month}/${date.year}";
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.profile,
-    this.fallbackName,
-    this.fallbackEmail,
-  });
-
-  final ProfileEntity profile;
-  final String? fallbackName;
-  final String? fallbackEmail;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 42,
-              backgroundImage:
-                  profile.picture != null && profile.picture!.isNotEmpty
-                  ? NetworkImage(profile.picture!)
-                  : null,
-              child: profile.picture == null || profile.picture!.isEmpty
-                  ? const Icon(Icons.person, size: 42)
-                  : null,
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    profile.name.isNotEmpty
-                        ? profile.name
-                        : fallbackName ?? "Traveler",
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    profile.email.isNotEmpty
-                        ? profile.email
-                        : fallbackEmail ?? "Email unavailable",
-                  ),
-                  const SizedBox(height: 10),
-                  Chip(
-                    avatar: const Icon(Icons.verified, size: 18),
-                    label: Text(profile.role),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+  Widget _buildSectionTitle(ThemeData theme, String title) {
+    return Text(
+      title,
+      style: theme.textTheme.titleMedium?.copyWith(
+        color: const Color(0xFF1E293B),
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
       ),
     );
   }
-}
 
-class _CompletionCard extends StatelessWidget {
-  const _CompletionCard(this.profile);
-
-  final ProfileEntity profile;
-
-  @override
-  Widget build(BuildContext context) {
-    int completed = 0;
-    const total = 8;
-
-    if (profile.name.isNotEmpty) completed++;
-    if (profile.email.isNotEmpty) completed++;
-    if ((profile.profile.bio ?? "").isNotEmpty) completed++;
-    if ((profile.profile.gender ?? "").isNotEmpty) completed++;
-    if ((profile.profile.dob ?? "").isNotEmpty) completed++;
-    if ((profile.location.city ?? "").isNotEmpty) completed++;
-    if ((profile.preferences.language ?? "").isNotEmpty) completed++;
-    if ((profile.preferences.theme ?? "").isNotEmpty) completed++;
-
-    final progress = completed / total;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Profile Completion",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(value: progress),
-            const SizedBox(height: 12),
-            Text("${(progress * 100).round()}% Complete"),
-          ],
-        ),
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color iconColor = const Color(0xFF475569),
+    Color textColor = const Color(0xFF0F172A),
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.children,
-  });
-
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon),
-                const SizedBox(width: 10),
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
-              ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: ListTile(
+          onTap: onTap,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          leading: Icon(icon, color: iconColor),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
-            const Divider(height: 24),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  const _InfoTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(radius: 20, child: Icon(icon, size: 20)),
-      title: Text(title),
-      subtitle: Text(value, maxLines: 3, overflow: TextOverflow.ellipsis),
-    );
-  }
-}
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: List.generate(
-        6,
-        (index) => Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Container(
-            height: index == 0 ? 120 : 90,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          ),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
             ),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right_rounded,
+            color: Color(0xFF94A3B8),
           ),
         ),
       ),
@@ -427,83 +297,42 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        const SizedBox(height: 80),
-        Icon(
-          Icons.error_outline,
-          size: 72,
-          color: Theme.of(context).colorScheme.error,
-        ),
-        const SizedBox(height: 20),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Color(0xFFDC2626),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Unable to load profile',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
             ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: FilledButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text("Retry"),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        const SizedBox(height: 80),
-        Icon(
-          Icons.person_outline,
-          size: 80,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(height: 20),
-        Center(
-          child: Text(
-            "Profile not found",
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              "Complete your profile to personalize your experience.",
-              textAlign: TextAlign.center,
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F46E5),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: FilledButton.icon(
-            onPressed: () {
-              context.push(RoutePaths.editProfile);
-            },
-            icon: const Icon(Icons.edit),
-            label: const Text("Create Profile"),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/auth_provider.dart';
-import '../../../auth/widgets/auth_loading_widget.dart';
+import 'package:sarthee_ai/features/auth/auth_provider.dart';
+import 'package:sarthee_ai/features/auth/widgets/auth_loading_widget.dart';
 import '../../domain/splash_state.dart';
 import '../controllers/splash_controller.dart';
 import '../widgets/splash_loading_indicator.dart';
@@ -69,25 +69,65 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     final double authProgress = ref.watch(splashAuthProgressProvider);
     final startup = ref.watch(authStartupProvider);
 
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colors = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colors.surface,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            return _SplashContent(
-              state: splashState,
-              stepMessage: stepMessage,
-              progress: authProgress,
-              showRetry: startup.hasError,
-              availableWidth: constraints.maxWidth,
-              availableHeight: constraints.maxHeight,
-              onRetry: _retryInitialization,
-            );
-          },
-        ),
+      body: Stack(
+        children: <Widget>[
+          // Background Gradient: #FFFFFF -> #F6F8FF -> #FFFFFF
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: <Color>[
+                    Color(0xFFFFFFFF),
+                    Color(0xFFF6F8FF),
+                    Color(0xFFFFFFFF),
+                  ],
+                  stops: <double>[0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // India Skyline Background Artwork (Opacity 0.08 - 0.10)
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                widthFactor: 1.0,
+                child: Opacity(
+                  opacity: 0.09,
+                  child: Image.asset(
+                    'assets/images/splash/india_skyline.png',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.bottomCenter,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Foreground Content Hierarchy
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                return _SplashContent(
+                  state: splashState,
+                  stepMessage: stepMessage,
+                  progress: authProgress,
+                  showRetry: startup.hasError,
+                  availableWidth: constraints.maxWidth,
+                  availableHeight: constraints.maxHeight,
+                  onRetry: _retryInitialization,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -115,77 +155,187 @@ class _SplashContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colors = theme.colorScheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
-    final bool compactHeight = availableHeight < 600;
+    final bool compactHeight = availableHeight < 650;
     final bool reduceMotion = mediaQuery.disableAnimations;
-    final double horizontalPadding = _horizontalPadding(availableWidth);
-    final double logoSize = _logoSize(
-      width: availableWidth,
-      compactHeight: compactHeight,
-    );
 
     final Widget startupState = _buildStartupState(context);
 
-    return Center(
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: compactHeight ? 24 : 40,
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: _horizontalPadding(availableWidth),
+                vertical: compactHeight ? 16 : 28,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Semantics(
+                  container: true,
+                  label: 'Sarthee AI startup screen',
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      // 1. Animated Logo
+                      SplashLogo(
+                        size: compactHeight ? 110 : 134,
+                        animate: !reduceMotion,
+                      ),
+
+                      SizedBox(height: compactHeight ? 20 : 28),
+
+                      // 2. Title: "Starting Sarthee AI" (fontSize: 32, w700, letterSpacing: -0.5)
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          'Starting Sarthee AI',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: const Color(0xFF1E293B),
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // 3. Divider: ──── ✦ ──── (Opacity ~40%)
+                      Opacity(
+                        opacity: 0.40,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const <Widget>[
+                            SizedBox(
+                              width: 44,
+                              child: Divider(
+                                thickness: 1,
+                                color: Color(0xFF3B82F6),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Icon(
+                                Icons.star_rounded,
+                                size: 12,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 44,
+                              child: Divider(
+                                thickness: 1,
+                                color: Color(0xFF3B82F6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // 4. Description: "Preparing your personalized experience..."
+                      Text(
+                        'Preparing your personalized experience...',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF475569),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w400,
+                          height: 1.35,
+                        ),
+                      ),
+
+                      SizedBox(height: compactHeight ? 20 : 26),
+
+                      // 5. Time Info Container: Schedule Icon + 30s notice
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.schedule_rounded,
+                                size: 18,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'First launch may take a little longer\nwhile we prepare everything for you.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: const Color(0xFF334155),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: compactHeight ? 28 : 36),
+
+                      // 6. Loading Indicator / Real-state progress
+                      startupState,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Semantics(
-            container: true,
-            label: 'Sarthee AI startup',
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                SplashLogo(size: logoSize, animate: !reduceMotion),
-                SizedBox(height: compactHeight ? 22 : 30),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Sarthee AI',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: colors.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+
+        // 7. Footer: Secure • Intelligent • Personalized (fontSize: 13, opacity: 0.55)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16, top: 8),
+          child: Opacity(
+            opacity: 0.55,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                Icon(
+                  Icons.verified_user_outlined,
+                  size: 14,
+                  color: Color(0xFF475569),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(width: 6),
                 Text(
-                  'Smart travel. Local culture. AI assistance.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
+                  'Secure  •  Intelligent  •  Personalized',
+                  style: TextStyle(
+                    color: Color(0xFF475569),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                SizedBox(height: compactHeight ? 30 : 44),
-                if (reduceMotion)
-                  startupState
-                else
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
-                    reverseDuration: const Duration(milliseconds: 180),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder:
-                        (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                    child: startupState,
-                  ),
               ],
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -201,22 +351,11 @@ class _SplashContent extends StatelessWidget {
       );
     }
 
-    if (state.isReady) {
-      return SplashLoadingIndicator(
-        key: const ValueKey<String>('splash-ready'),
-        progress: 1.0,
-        message: stepMessage,
-        indeterminate: false,
-        showPercentage: false,
-      );
-    }
-
     return SplashLoadingIndicator(
-      key: const ValueKey<String>('splash-loading'),
-      progress: progress.clamp(0.0, 1.0),
+      key: const ValueKey<String>('splash-indicator'),
       message: stepMessage,
-      indeterminate: progress <= 0.05,
-      showPercentage: progress > 0.05,
+      progress: progress,
+      showSpinner: true,
     );
   }
 
@@ -224,16 +363,7 @@ class _SplashContent extends StatelessWidget {
     if (!width.isFinite || width <= 0) {
       return 24;
     }
-    if (width >= 1600) return 80;
-    if (width >= 1200) return 64;
-    if (width >= 840) return 48;
-    if (width >= 600) return 32;
+    if (width >= 840) return 40;
     return 24;
-  }
-
-  double _logoSize({required double width, required bool compactHeight}) {
-    if (compactHeight) return 84;
-    if (width >= 840) return 120;
-    return 104;
   }
 }

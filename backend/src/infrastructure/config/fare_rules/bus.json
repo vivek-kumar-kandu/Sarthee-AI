@@ -1,0 +1,14 @@
+{
+  "currency": "INR",
+  "nonAcBus": [
+    { "maxKm": 4, "fare": 5 },
+    { "maxKm": 10, "fare": 10 },
+    { "maxKm": 999, "fare": 15 }
+  ],
+  "acBus": [
+    { "maxKm": 4, "fare": 10 },
+    { "maxKm": 8, "fare": 15 },
+    { "maxKm": 12, "fare": 20 },
+    { "maxKm": 999, "fare": 25 }
+  ]
+}
