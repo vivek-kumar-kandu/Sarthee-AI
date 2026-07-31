@@ -6,6 +6,7 @@ import '../../data/datasources/nominatim_search_datasource.dart';
 import '../providers/smart_journey_provider.dart';
 import '../widgets/journey_option_card.dart';
 import '../widgets/sarthee_ai_advisor_card.dart';
+import '../widgets/sarthee_leaflet_map_widget.dart';
 import '../../domain/entities/journey_plan.dart';
 
 class SmartJourneyPlannerPage extends ConsumerStatefulWidget {
@@ -328,6 +329,14 @@ class _SmartJourneyPlannerPageState extends ConsumerState<SmartJourneyPlannerPag
                   style: const TextStyle(color: Color(0xFF991B1B)),
                 ),
               ),
+
+            // Interactive Leaflet 3D Vector Route Map
+            if (state.selectedPlan != null) ...[
+              SartheeLeafletMapWidget(
+                plan: state.selectedPlan!,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // AI Recommendation Banner
             if (state.selectedPlan?.aiRationale != null)

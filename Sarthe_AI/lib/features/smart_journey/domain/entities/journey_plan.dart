@@ -28,6 +28,7 @@ class JourneyPlan {
   final List<JourneyStep> steps;
   final FareSummary fareSummary;
   final String aiRationale;
+  final String? polyline;
 
   const JourneyPlan({
     required this.id,
@@ -45,6 +46,7 @@ class JourneyPlan {
     required this.steps,
     required this.fareSummary,
     required this.aiRationale,
+    this.polyline,
   });
 
   factory JourneyPlan.fromJson(Map<String, dynamic> json) {
@@ -69,6 +71,7 @@ class JourneyPlan {
           ? FareSummary.fromJson(json['fareSummary'] as Map<String, dynamic>)
           : const FareSummary(totalAmount: 0, items: []),
       aiRationale: json['aiRationale'] as String? ?? 'Sarthee AI Journey Recommendation',
+      polyline: json['polyline'] as String?,
     );
   }
 

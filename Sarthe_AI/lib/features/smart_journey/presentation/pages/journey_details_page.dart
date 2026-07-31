@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../domain/entities/journey_plan.dart';
 import '../providers/active_trip_provider.dart';
 import '../widgets/sarthee_ai_advisor_card.dart';
+import '../widgets/sarthee_leaflet_map_widget.dart';
 import '../widgets/step_detail_tile.dart';
 import '../widgets/fare_breakdown_card.dart';
 
@@ -83,6 +84,13 @@ class JourneyDetailsPage extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+
+            // Interactive Leaflet Vector Map
+            SartheeLeafletMapWidget(
+              plan: plan,
+              height: 260,
             ),
             const SizedBox(height: 16),
 
