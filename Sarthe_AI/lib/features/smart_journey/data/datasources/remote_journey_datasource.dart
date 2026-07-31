@@ -34,12 +34,17 @@ class RemoteJourneyDatasource {
       final responseBody = response.data as Map<String, dynamic>;
       final dataObj = responseBody['data'] as Map<String, dynamic>?;
 
-      if (dataObj != null && dataObj['plans'] != null) {
-        final plansObj = dataObj['plans'] as Map<String, dynamic>;
-        final List<JourneyPlan> parsedPlans = [];
+      if (dataObj != null) {
+        Map<String, dynamic> plansObj = {};
+        if (dataObj['plans'] != null && dataObj['plans'] is Map<String, dynamic>) {
+          plansObj = dataObj['plans'] as Map<String, dynamic>;
+        } else {
+          plansObj = dataObj;
+        }
 
+        final List<JourneyPlan> parsedPlans = [];
         plansObj.forEach((key, value) {
-          if (value is Map<String, dynamic>) {
+          if (value is Map<String, dynamic> && value.containsKey('mode')) {
             parsedPlans.add(JourneyPlan.fromJson(value));
           }
         });
