@@ -154,3 +154,4 @@ function validatePositiveInteger(value, name) {
     throw new TypeError(`${name} must be a positive integer.`);
   }
 }
+

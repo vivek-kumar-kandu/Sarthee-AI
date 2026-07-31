@@ -17,3 +17,4 @@ export class JourneyPlanRequestDTO {
     this.preferences = payload.preferences || {};
   }
 }
+

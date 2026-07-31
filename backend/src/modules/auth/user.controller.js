@@ -226,3 +226,4 @@ export function createUserController(options) {
 export const userController = new UserController();
 
 export default userController;
+

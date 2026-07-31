@@ -107,3 +107,4 @@ router.get("/", homeController.getHomeContent);
 export { router as homeRouter };
 
 export default router;
+

@@ -12,3 +12,4 @@ export class IWeatherProvider {
     throw new Error('IWeatherProvider.getWeatherAdvisory must be implemented by subclass.');
   }
 }
+

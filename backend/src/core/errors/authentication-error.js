@@ -42,3 +42,4 @@ export class AuthenticationError extends AppError {
     });
   }
 }
+

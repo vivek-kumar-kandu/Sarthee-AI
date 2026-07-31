@@ -15,3 +15,4 @@ export class IRoutingProvider {
     throw new Error('IRoutingProvider.calculateRoute must be implemented by subclass.');
   }
 }
+

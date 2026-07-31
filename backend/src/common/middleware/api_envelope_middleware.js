@@ -28,3 +28,4 @@ export function formatErrorResponse(code, message, details = {}, requestId = 're
     },
   };
 }
+

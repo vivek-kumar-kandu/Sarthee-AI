@@ -155,3 +155,4 @@ export class OverpassPoiProvider extends IPoiProvider {
     return Math.round(R * c);
   }
 }
+

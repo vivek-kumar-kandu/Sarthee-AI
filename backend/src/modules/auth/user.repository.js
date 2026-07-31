@@ -71,3 +71,4 @@ export function createUserRepository(options) {
 export const userRepository = new UserRepository();
 
 export default userRepository;
+

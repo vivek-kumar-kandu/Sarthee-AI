@@ -116,3 +116,4 @@ export const corsMiddleware = cors(corsOptions);
 export function getAllowedCorsOrigins() {
   return Object.freeze([...allowedOrigins]);
 }
+

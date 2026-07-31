@@ -316,3 +316,4 @@ export function logShutdown({ signal, reason } = {}) {
     "Sarthee AI backend shutting down",
   );
 }
+

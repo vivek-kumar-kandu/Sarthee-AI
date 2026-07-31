@@ -149,3 +149,4 @@ function normalizeAuthError(error) {
     reason: "Unable to verify Firebase authentication token.",
   });
 }
+

@@ -33,3 +33,4 @@ export class IPoiProvider extends IJourneyProvider {
     return this.getNearbyLandmark(context.originLat, context.originLng, radius);
   }
 }
+

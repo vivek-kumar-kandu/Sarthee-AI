@@ -35,3 +35,4 @@ export class IJourneyProvider {
     throw new Error(`Method execute() must be implemented by provider plugin "${this.id}".`);
   }
 }
+

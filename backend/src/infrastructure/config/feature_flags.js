@@ -21,3 +21,4 @@ export const featureFlags = {
     experimentDynamicSurge: process.env.EXPERIMENT_DYNAMIC_SURGE === 'true',
   },
 };
+

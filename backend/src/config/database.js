@@ -157,3 +157,4 @@ export async function disconnectDatabase() {
 export function isDatabaseConnected() {
   return databaseConnected;
 }
+

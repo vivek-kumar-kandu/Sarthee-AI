@@ -1,0 +1,37 @@
+{
+  "radius": {
+    "defaultMeters": 5000,
+    "maxMeters": 15000,
+    "minMeters": 500
+  },
+  "limits": {
+    "defaultPerCategory": 20,
+    "maxPerCategory": 50,
+    "maxTotal": 100
+  },
+  "providers": {
+    "timeoutMs": 4000,
+    "mirrors": [
+      "https://overpass-api.de/api/interpreter",
+      "https://lz4.overpass-api.de/api/interpreter",
+      "https://overpass.openstreetmap.fr/api/interpreter"
+    ]
+  },
+  "scoring": {
+    "distance": 0.35,
+    "rating": 0.25,
+    "weather": 0.20,
+    "openStatus": 0.10,
+    "userPreference": 0.10
+  },
+  "categories": [
+    "heritage",
+    "food",
+    "hotels",
+    "emergency",
+    "temples",
+    "parks",
+    "shopping",
+    "fuel"
+  ]
+}

@@ -47,3 +47,4 @@ export class IncidentProvider extends IJourneyProvider {
     }
   }
 }
+

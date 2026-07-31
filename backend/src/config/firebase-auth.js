@@ -34,3 +34,4 @@ export const firebaseAuthVerifier = {
 export async function verifyFirebaseIdToken(idToken) {
   return firebaseAuthVerifier.verifyIdToken(idToken);
 }
+

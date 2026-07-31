@@ -59,3 +59,4 @@ export function notFoundMiddleware(req, res) {
 }
 
 export default notFoundMiddleware;
+

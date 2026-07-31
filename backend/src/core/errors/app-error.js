@@ -115,3 +115,4 @@ function normalizeErrorCode(value) {
 
   return ERROR_CODE.INTERNAL_ERROR;
 }
+

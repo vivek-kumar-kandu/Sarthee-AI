@@ -58,3 +58,4 @@ router.put("/profile", firebaseAuthMiddleware, userController.updateProfile);
 export { router as authRouter };
 
 export default router;
+

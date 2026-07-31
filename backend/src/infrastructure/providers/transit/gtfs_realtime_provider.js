@@ -92,3 +92,4 @@ export class GtfsRealtimeProvider extends ITransitProvider {
     }
   }
 }
+

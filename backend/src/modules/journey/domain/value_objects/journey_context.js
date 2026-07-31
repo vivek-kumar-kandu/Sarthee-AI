@@ -48,3 +48,4 @@ export class JourneyContext {
     return this.plans[this.preferredMode] || this.plans['balanced'] || Object.values(this.plans)[0] || null;
   }
 }
+

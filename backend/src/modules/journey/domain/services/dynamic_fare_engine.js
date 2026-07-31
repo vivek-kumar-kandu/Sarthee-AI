@@ -65,3 +65,4 @@ export class DynamicFareEngine {
 function isSelectedOrTrue(val) {
   return val === true;
 }
+

@@ -27,3 +27,4 @@ export function validateStartupConfig(env = process.env) {
 
   return true;
 }
+

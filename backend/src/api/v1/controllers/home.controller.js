@@ -338,3 +338,4 @@ export function createHomeController(options) {
 export const homeController = new HomeController();
 
 export default homeController;
+

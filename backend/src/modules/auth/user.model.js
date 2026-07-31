@@ -194,3 +194,4 @@ userSchema.index({ createdAt: -1 });
 export const User = mongoose.model("User", userSchema);
 
 export default User;
+

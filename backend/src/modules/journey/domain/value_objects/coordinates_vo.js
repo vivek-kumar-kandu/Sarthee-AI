@@ -13,3 +13,4 @@ export class CoordinatesVO {
     this.longitude = longitude;
   }
 }
+

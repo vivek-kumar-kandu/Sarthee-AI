@@ -25,3 +25,4 @@ export class ITransitProvider extends IJourneyProvider {
     throw new Error('Method getTransitStatus() must be implemented by subclass.');
   }
 }
+

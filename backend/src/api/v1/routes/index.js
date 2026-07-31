@@ -4,6 +4,9 @@ import healthRoutes from "./health.routes.js";
 import homeRoutes from "./home.routes.js";
 import authRoutes from "../../../modules/auth/auth.routes.js";
 import { createJourneyRouter } from "../../../modules/journey/presentation/routes/journey_routes.js";
+import { adminRouter } from "../../../modules/admin/presentation/routes/admin_routes.js";
+import { emergencyRouter } from "../../../modules/emergency/presentation/routes/emergency_routes.js";
+
 
 /**
  * ============================================================================
@@ -110,6 +113,19 @@ router.use("/auth", authRoutes);
  */
 router.use("/journey", createJourneyRouter());
 
+/**
+ * Admin Operations & Telemetry Platform
+ * GET /api/v1/admin/dashboard, GET /api/v1/admin/health, GET /api/v1/admin/analytics
+ */
+router.use("/admin", adminRouter);
+
+/**
+ * Emergency & Safety Intelligence Engine
+ * GET /api/v1/emergency, POST /api/v1/emergency/sos
+ */
+router.use("/emergency", emergencyRouter);
+
+
 // ============================================================================
 // FUTURE MODULE REGISTRY
 // ============================================================================
@@ -179,3 +195,4 @@ router.use("/journey", createJourneyRouter());
 export { router as apiV1Router };
 
 export default router;
+

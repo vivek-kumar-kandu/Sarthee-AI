@@ -127,3 +127,4 @@ function normalizeNonNegativeInteger(value, fallback) {
 
   return number;
 }
+

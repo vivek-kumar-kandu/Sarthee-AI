@@ -11,3 +11,4 @@ export class IAIProvider {
     throw new Error('IAIProvider.generateRationale must be implemented by subclass.');
   }
 }
+
