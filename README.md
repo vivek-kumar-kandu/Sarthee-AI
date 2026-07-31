@@ -1,10 +1,19 @@
 # 🚀 Sarthee AI — Intelligent Multi-Modal Mobility Assistant
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/vivek-kumar-kandu/Sarthee-AI)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-blue.svg)](https://nodejs.org)
-[![Flutter Version](https://img.shields.io/badge/flutter-3.x-blue.svg)](https://flutter.dev)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Deployment](https://img.shields.io/badge/render-live-success.svg)](https://sarthee-ai.onrender.com)
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
+  <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
+  <img src="https://img.shields.io/badge/Node.js-22.x_LTS-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-v5.2-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/MongoDB_Atlas-Connected-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Redis_Cache-0ms_Reuse-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/Firebase_Auth-JWT_Verified-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
+  <img src="https://img.shields.io/badge/Render_Cloud-Live-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render" />
+  <img src="https://img.shields.io/badge/Google_Gemini-2.0_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" />
+</p>
+
+---
 
 **Sarthee AI** is an intelligent, multi-modal travel, navigation, and urban mobility assistant engineered specifically for urban India (Delhi NCR, Ghaziabad, Noida, Gurgaon, and major Indian metro hubs).
 
@@ -76,6 +85,21 @@ cd Sarthe_AI
 flutter pub get
 flutter analyze
 flutter run
+```
+
+---
+
+## 🏷️ Recommended GitHub Topics & Releases
+
+### GitHub Repository Topics
+Add the following topics to your GitHub repository settings to enhance discoverability:
+`flutter` • `dart` • `nodejs` • `express` • `mongodb` • `redis` • `firebase` • `navigation` • `journey-planner` • `clean-architecture` • `riverpod` • `gemini-ai`
+
+### Creating Releases
+Tag repository versions to match **[CHANGELOG.md](CHANGELOG.md)** entries:
+```bash
+git tag -a v1.0.0 -m "v1.0.0 Initial Production Release"
+git push origin v1.0.0
 ```
 
 ---
