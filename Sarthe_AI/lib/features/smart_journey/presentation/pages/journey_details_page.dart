@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../domain/entities/journey_plan.dart';
 import '../providers/active_trip_provider.dart';
 import '../widgets/sarthee_ai_advisor_card.dart';
 import '../widgets/sarthee_leaflet_map_widget.dart';
 import '../widgets/step_detail_tile.dart';
 import '../widgets/fare_breakdown_card.dart';
+import '../widgets/active_trip_guidance_widget.dart';
 
 class JourneyDetailsPage extends ConsumerWidget {
   final JourneyPlan plan;
@@ -19,6 +19,8 @@ class JourneyDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeSession = ref.watch(activeTripProvider).value;
+    final isTripActive = activeSession != null && activeSession.plan.id == plan.id;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
@@ -114,29 +116,33 @@ class JourneyDetailsPage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Start Journey Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 4,
-                ),
-                onPressed: () async {
-                  await ref.read(activeTripProvider.notifier).startTrip(plan);
-                  if (context.mounted) {
-                    context.push('/active-trip');
-                  }
-                },
-                icon: const Icon(Icons.navigation_rounded, color: Colors.white),
-                label: const Text(
-                  "Start Active Trip Guidance",
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
-            ),
+            // Start Journey Button & Live Guidance View
+            isTripActive
+                ? ActiveTripGuidanceWidget(
+                    plan: plan,
+                    onEndTrip: () {
+                      ref.read(activeTripProvider.notifier).cancelTrip();
+                    },
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0D9488),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 4,
+                      ),
+                      onPressed: () async {
+                        await ref.read(activeTripProvider.notifier).startTrip(plan);
+                      },
+                      icon: const Icon(Icons.navigation_rounded, color: Colors.white),
+                      label: const Text(
+                        "Start Active Trip Guidance",
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),

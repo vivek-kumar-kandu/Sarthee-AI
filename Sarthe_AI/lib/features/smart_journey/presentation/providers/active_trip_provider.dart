@@ -39,6 +39,10 @@ class ActiveTripNotifier extends StateNotifier<AsyncValue<JourneySession?>> {
     }
   }
 
+  void cancelTrip() {
+    state = const AsyncValue.data(null);
+  }
+
   void nextStep() {
     final currentSession = state.value;
     if (currentSession == null) return;
@@ -49,6 +53,7 @@ class ActiveTripNotifier extends StateNotifier<AsyncValue<JourneySession?>> {
       state = AsyncValue.data(updated);
     } else {
       updateStatus(JourneyStatus.completed);
+      state = const AsyncValue.data(null);
     }
   }
 }

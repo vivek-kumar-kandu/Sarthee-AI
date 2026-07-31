@@ -2,6 +2,7 @@ import { JourneyProviderRegistry } from '../../../../infrastructure/providers/re
 import { OverpassPoiProvider } from '../../../../infrastructure/providers/poi/overpass_poi_provider.js';
 import { OpenWeatherProvider } from '../../../../infrastructure/providers/weather/openweather_provider.js';
 import { MultiModalGraphSearchService } from '../services/multi_modal_graph_search_service.js';
+import { RouteRankingEngine } from '../services/route_ranking_engine.js';
 import { JourneyAdvisorService } from '../services/journey_advisor_service.js';
 import { JourneyContext } from '../value_objects/journey_context.js';
 import { logger } from '../../../../config/logger.js';
@@ -59,6 +60,9 @@ export class JourneyIntelligenceOrchestrator {
       }
     }
 
+    // Apply Deterministic Route Re-Ranking based on Weather & Time
+    const rankedPlans = RouteRankingEngine.reRankPlans(plans, weatherAdvisory);
+
     const orchestrationTimeMs = Date.now() - startTime;
 
     // Create Immutable JourneyContext
@@ -70,7 +74,7 @@ export class JourneyIntelligenceOrchestrator {
       destinationLat,
       destinationLng,
       preferredMode,
-      plans,
+      plans: rankedPlans,
       weather: weatherAdvisory,
       originLandmark,
       providerMetadata: {

@@ -50,22 +50,40 @@ export class MultiModalGraphSearchService {
     return 60;
   }
 
-  calculateAutoFare(distanceKm) {
+  /**
+   * Dynamic Fare Surge Multiplier Engine
+   * Applies Peak Hour (1.15x), Rain (1.25x), and Late Night (1.25x) surge multipliers
+   */
+  getFareSurgeMultiplier(hourOfDay = new Date().getHours(), isRain = false) {
+    let multiplier = 1.0;
+    const isPeak = (hourOfDay >= 8 && hourOfDay <= 10) || (hourOfDay >= 17 && hourOfDay <= 20);
+    const isNight = hourOfDay >= 23 || hourOfDay < 5;
+
+    if (isPeak) multiplier *= 1.15;
+    if (isNight) multiplier *= 1.25;
+    if (isRain) multiplier *= 1.25;
+
+    return multiplier;
+  }
+
+  calculateAutoFare(distanceKm, options = {}) {
     const baseFare = autoFareRules?.privateAuto?.baseFare ?? 30.0;
     const baseDist = autoFareRules?.privateAuto?.baseDistanceKm ?? 1.5;
     const perKm = autoFareRules?.privateAuto?.perKmRate ?? 9.5;
+    const surge = this.getFareSurgeMultiplier(options.hourOfDay, options.isRain);
 
-    if (distanceKm <= baseDist) return Math.round(baseFare);
-    return Math.round(baseFare + (distanceKm - baseDist) * perKm);
+    const rawFare = distanceKm <= baseDist ? baseFare : (baseFare + (distanceKm - baseDist) * perKm);
+    return Math.round(rawFare * surge);
   }
 
-  calculateCabFare(distanceKm) {
+  calculateCabFare(distanceKm, options = {}) {
     const baseFare = 50.0;
     const baseDist = 2.0;
     const perKm = 14.0;
+    const surge = this.getFareSurgeMultiplier(options.hourOfDay, options.isRain);
 
-    if (distanceKm <= baseDist) return Math.round(baseFare);
-    return Math.round(baseFare + (distanceKm - baseDist) * perKm);
+    const rawFare = distanceKm <= baseDist ? baseFare : (baseFare + (distanceKm - baseDist) * perKm);
+    return Math.round(rawFare * surge);
   }
 
   calculateBusFare(distanceKm, isAc = false) {
