@@ -102,6 +102,13 @@ router.use("/home", homeRoutes);
  */
 router.use("/auth", authRoutes);
 
+/**
+ * Smart Journey Engine
+ *
+ * POST /api/v1/journey/plan
+ */
+router.use("/journey", createJourneyRouter());
+
 // ============================================================================
 // FUTURE MODULE REGISTRY
 // ============================================================================
