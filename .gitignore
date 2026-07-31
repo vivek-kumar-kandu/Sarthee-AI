@@ -105,8 +105,6 @@ coverage/
 # --------------------------------------
 .idea/
 .vscode/
-!.vscode/settings.json
-!.vscode/extensions.json
 *.swp
 *.swo
 
@@ -122,18 +120,8 @@ Thumbs.db
 Desktop.ini
 
 # --------------------------------------
-# Generated Binary & Large Local Docs
+# Local Document Dumps & Temp Artifacts
 # --------------------------------------
-*.pdf
-*.docx
+project_structure.txt
 *.tmp
 *.bak
-
-# --------------------------------------
-# Internal Architecture Docs & Local Structure Dumps
-# (Hidden from GitHub repository view)
-# --------------------------------------
-Sarthee_AI_Enterprise_Developer_Handbook.md
-sarthe_ai_flutter_architecture.md
-sarthee_ai_architecture_and_developer_guide.md
-project_structure.txt
