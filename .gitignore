@@ -128,3 +128,12 @@ Desktop.ini
 *.docx
 *.tmp
 *.bak
+
+# --------------------------------------
+# Internal Architecture Docs & Local Structure Dumps
+# (Hidden from GitHub repository view)
+# --------------------------------------
+Sarthee_AI_Enterprise_Developer_Handbook.md
+sarthe_ai_flutter_architecture.md
+sarthee_ai_architecture_and_developer_guide.md
+project_structure.txt
