@@ -13,6 +13,9 @@ export class JourneyContext {
     preferredMode,
     plans = {},
     weather = null,
+    transit = null,
+    traffic = null,
+    incidents = [],
     originLandmark = null,
     destLandmark = null,
     providerMetadata = {},
@@ -26,6 +29,9 @@ export class JourneyContext {
     this.preferredMode = preferredMode || 'balanced';
     this.plans = Object.freeze({ ...plans });
     this.weather = weather ? Object.freeze({ ...weather }) : null;
+    this.transit = transit ? Object.freeze({ ...transit }) : null;
+    this.traffic = traffic ? Object.freeze({ ...traffic }) : null;
+    this.incidents = Object.freeze([...incidents]);
     this.originLandmark = originLandmark ? Object.freeze({ ...originLandmark }) : null;
     this.destLandmark = destLandmark ? Object.freeze({ ...destLandmark }) : null;
     this.providerMetadata = Object.freeze({ ...providerMetadata });

@@ -112,18 +112,24 @@ class StepDetailTile extends StatelessWidget {
                   step.instruction,
                   style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.35),
                 ),
-                if (step.metroGateNumber != null || step.platformNumber != null) ...[
+                if (step.type == StepType.metro || step.type == StepType.bus || step.type == StepType.cab || step.type == StepType.auto || step.metroGateNumber != null || step.platformNumber != null) ...[
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
                     children: [
+                      if (step.nextDepartureInMinutes != null)
+                        _buildBadge(Icons.sensors_rounded, "🟢 LIVE • Next ${step.nextDepartureInMinutes} min", Colors.green)
+                      else if (step.type == StepType.metro)
+                        _buildBadge(Icons.schedule_rounded, "🔵 SCHEDULED • Every 4–6 mins", Colors.indigo)
+                      else if (step.type == StepType.bus)
+                        _buildBadge(Icons.schedule_rounded, "🔵 SCHEDULED • Every 12–15 mins", Colors.blue),
+                      if (step.type == StepType.cab || step.type == StepType.auto)
+                        _buildBadge(Icons.traffic_rounded, "🚦 Traffic Status Unavailable", Colors.orange),
                       if (step.metroGateNumber != null)
                         _buildBadge(Icons.door_sliding_outlined, step.metroGateNumber!, Colors.indigo),
                       if (step.platformNumber != null)
                         _buildBadge(Icons.train_outlined, step.platformNumber!, Colors.deepOrange),
-                      if (step.nextDepartureInMinutes != null)
-                        _buildBadge(Icons.access_time_rounded, "ETA ${step.nextDepartureInMinutes} min", Colors.teal),
                     ],
                   ),
                 ],

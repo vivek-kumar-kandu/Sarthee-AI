@@ -183,8 +183,22 @@ $$\text{Score} = (\text{Time} \times 0.40) + (\text{Cost} \times 0.20) + (\text{
 - **Rain Re-Ranking**: Penalizes open walking (>250m) and open e-rickshaws, automatically promoting **Covered Metro Rail** as the top recommended route option.
 - **Heat Re-Ranking**: Triggers when temperature $\ge 38^\circ\text{C}$, penalizing unshaded walking (>300m) and promoting AC transit.
 
-### 5.3 Active Trip Guidance (MVP)
+### 5.3 Active Trip Guidance & Voice Suite
 Flutter UI component (`ActiveTripGuidanceWidget.dart`) providing real-time trip execution state:
 - Live leg progress bar (`LinearProgressIndicator`).
 - Current step milestone details with OpenStreetMap landmark tips.
+- Spoken turn-by-turn navigation via `VoiceGuidanceService.dart`.
 - Next arrival milestone alerts and completion controls (`▶`).
+
+---
+
+## 📌 6. Phase 2B & 2C Live Transit, Traffic & Incident Intelligence
+
+### 6.1 Generic Transit Abstraction & Trustworthy Fallback (`ITransitProvider`)
+- Implements generic provider pattern (`GtfsRealtimeProvider`, `GtfsStaticProvider`) driven by `TRANSIT_PROVIDER` system configuration.
+- **Rule — "Never Fake Real-Time"**: When live GTFS feeds are offline or unconfigured (`UNCONFIGURED`), transparently displays scheduled timetable metadata (`status: "SCHEDULED"`, `confidence: 0.7`) instead of faking fake countdown ETAs.
+
+### 6.2 Traffic & Incident Intelligence (`TrafficProvider` & `IncidentProvider`)
+- **Traffic Feed Monitor (`TrafficFeedMonitor.js`)**: Tracks feed health states (`UNCONFIGURED`, `HEALTHY`, `OFFLINE`).
+- **Verified Congestion Penalties (`RouteRankingEngine.js`)**: Heavy road congestion (`+12 min delay`) or road closures (`ROAD_CLOSED`) automatically apply score penalties to cab/auto routes, promoting **Metro Rail** as the #1 recommended plan.
+- **Flutter UI**: Displays `🟢 LIVE` or `🔵 SCHEDULED` badges, `🚦 Traffic` status chips, and `🚧 Incident` warning banners.

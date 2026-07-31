@@ -34,9 +34,11 @@ export class RouteRankingEngine {
    * @param {Object} plan Journey plan object
    * @param {Object|null} weather Weather advisory object
    * @param {number} hourOfDay Current hour of day
+   * @param {Object|null} traffic Traffic status object
+   * @param {Array} incidents Active incidents list
    * @returns {number} Score from 0 to 100
    */
-  calculateRouteScore(plan, weather = null, hourOfDay = new Date().getHours()) {
+  calculateRouteScore(plan, weather = null, hourOfDay = new Date().getHours(), traffic = null, incidents = []) {
     if (!plan) return 0;
 
     const isRain = weather?.isRainExpected || weather?.condition?.toLowerCase()?.includes('rain') || false;
@@ -44,7 +46,14 @@ export class RouteRankingEngine {
     const isFog = weather?.condition?.toLowerCase()?.includes('fog') || weather?.condition?.toLowerCase()?.includes('mist') || false;
 
     // 1. Time Score (Normalized: 60 mins = 50 pts, 20 mins = 100 pts)
-    const timeMins = plan.totalDurationMinutes || 40;
+    let timeMins = plan.totalDurationMinutes || 40;
+    const isRoadPlan = plan.mode === 'fastest' || (plan.steps || []).some((s) => s.type === 'cab' || s.type === 'auto');
+
+    // Add live traffic delay if road plan
+    if (isRoadPlan && traffic?.status === 'LIVE' && traffic?.delayMinutes > 0) {
+      timeMins += traffic.delayMinutes;
+    }
+
     const timeScore = Math.max(10, Math.min(100, 100 - (timeMins - 20) * 1.5));
 
     // 2. Cost Score (Normalized: ₹500 = 20 pts, ₹50 = 100 pts)
@@ -58,7 +67,7 @@ export class RouteRankingEngine {
     const walkMeters = plan.totalWalkingDistanceMeters || 300;
     let walkScore = Math.max(10, Math.min(100, 100 - (walkMeters - 100) * 0.06));
 
-    // 5. Weather & Comfort Score
+    // 5. Weather & Incident Comfort Score
     let weatherScore = 90;
     if (isRain) {
       if (walkMeters > this.config.maxWalkRainMeters) {
@@ -78,6 +87,11 @@ export class RouteRankingEngine {
       weatherScore -= 15;
     }
 
+    // Heavy traffic or road closed incident penalty for road plans
+    if (isRoadPlan && Array.isArray(incidents) && incidents.some((i) => i.type === 'ROAD_CLOSED')) {
+      weatherScore -= 40;
+    }
+
     // Weighted Formula
     const totalScore =
       timeScore * this.config.weights.time +
@@ -94,9 +108,11 @@ export class RouteRankingEngine {
    * @param {Object} plans Keyed map of journey plans
    * @param {Object|null} weather Weather advisory object
    * @param {number} hourOfDay Current hour of day
+   * @param {Object|null} traffic Traffic status object
+   * @param {Array} incidents Active incidents list
    * @returns {Object} Re-ranked journey plans
    */
-  reRankPlans(plans = {}, weather = null, hourOfDay = new Date().getHours()) {
+  reRankPlans(plans = {}, weather = null, hourOfDay = new Date().getHours(), traffic = null, incidents = []) {
     if (!plans || Object.keys(plans).length === 0) {
       return plans;
     }
@@ -106,7 +122,7 @@ export class RouteRankingEngine {
     let highestScore = -1;
 
     for (const [key, plan] of Object.entries(updatedPlans)) {
-      const score = this.calculateRouteScore(plan, weather, hourOfDay);
+      const score = this.calculateRouteScore(plan, weather, hourOfDay, traffic, incidents);
       plan.recommendationScore = score;
 
       if (score > highestScore) {
@@ -121,7 +137,9 @@ export class RouteRankingEngine {
       const tempCelsius = weather?.tempCelsius ?? 28;
 
       let rationale = topPlan.aiRationale || '';
-      if (isRain) {
+      if (traffic?.status === 'LIVE' && traffic?.delayMinutes > 10) {
+        rationale += ` 🚦 Heavy Traffic Alert (+${traffic.delayMinutes} min delay): Metro Rail promoted to bypass road congestion.`;
+      } else if (isRain) {
         rationale += ` ☔ Weather Advisory: Ranked #1 optimal plan (Score: ${highestScore}/100) prioritizing weather protection.`;
       } else if (tempCelsius >= this.config.heatThreshold) {
         rationale += ` ☀️ Heat Warning (${tempCelsius}°C): Ranked #1 optimal plan (Score: ${highestScore}/100) minimizing high temperature outdoor exposure.`;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/journey_plan.dart';
 import '../../domain/entities/journey_step.dart';
+import '../services/voice_guidance_service.dart';
 
 class ActiveTripGuidanceWidget extends StatefulWidget {
   final JourneyPlan plan;
@@ -18,12 +19,27 @@ class ActiveTripGuidanceWidget extends StatefulWidget {
 
 class _ActiveTripGuidanceWidgetState extends State<ActiveTripGuidanceWidget> {
   int _currentStepIndex = 0;
+  final VoiceGuidanceService _voiceService = VoiceGuidanceService();
+
+  @override
+  void initState() {
+    super.initState();
+    _triggerVoicePrompt();
+  }
+
+  void _triggerVoicePrompt() {
+    if (widget.plan.steps.isNotEmpty && _currentStepIndex < widget.plan.steps.length) {
+      final step = widget.plan.steps[_currentStepIndex];
+      _voiceService.speakPrompt("${step.title}. ${step.instruction}");
+    }
+  }
 
   void _nextStep() {
     if (_currentStepIndex < widget.plan.steps.length - 1) {
       setState(() {
         _currentStepIndex++;
       });
+      _triggerVoicePrompt();
     } else {
       widget.onEndTrip();
     }
@@ -34,6 +50,7 @@ class _ActiveTripGuidanceWidgetState extends State<ActiveTripGuidanceWidget> {
       setState(() {
         _currentStepIndex--;
       });
+      _triggerVoicePrompt();
     }
   }
 
@@ -90,6 +107,22 @@ class _ActiveTripGuidanceWidgetState extends State<ActiveTripGuidanceWidget> {
                 ),
               ),
               const Spacer(),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  _voiceService.isVoiceEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                  color: const Color(0xFF2563EB),
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _voiceService.toggleVoiceGuidance();
+                  });
+                },
+                tooltip: "Toggle Voice Navigation",
+              ),
+              const SizedBox(width: 8),
               Text(
                 "Step ${_currentStepIndex + 1} of $totalSteps",
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF2563EB)),
