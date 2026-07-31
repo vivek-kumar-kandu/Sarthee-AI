@@ -33,17 +33,30 @@ The system orchestrates seamless door-to-door journey recommendations combining 
 
 ## 📚 Technical Documentation Directory (`docs/`)
 
-For in-depth architectural blueprints, schemas, and developer manuals, explore our modular documentation suite:
+Explore our clean, modular documentation suite organized inside `docs/`:
+
+```text
+docs/
+├── ARCHITECTURE.md          ← System architecture, Clean Architecture, sequence & domain diagrams
+├── FLUTTER_GUIDE.md         ← Mobile frontend architecture (Sarthe_AI/lib/), Riverpod & GoRouter
+├── BACKEND_GUIDE.md         ← Express v5 API gateway (backend/src/), dynamic engines & Render cloud
+├── API_REFERENCE.md        ← REST API endpoints, DTO validation & response envelopes
+├── DATABASE.md             ← MongoDB Atlas users schema, index strategies & Redis caching
+├── SECURITY.md             ← Environment secret management, Firebase JWT auth & rate limits
+└── DEVELOPER_HANDBOOK.md   ← Developer onboarding handbook, 4-week roadmap & debugging guide
+```
+
+### Documentation Directory Summary:
 
 | Document | Description |
 | :--- | :--- |
-| 🏗️ **[Architecture Guide](docs/ARCHITECTURE.md)** | System architecture diagrams, Clean Architecture layers, request lifecycles, and class diagrams. |
-| 📡 **[API Reference](docs/API_REFERENCE.md)** | Endpoint specifications, HTTP headers, envelope schemas, and request/response JSON examples. |
-| 🗄️ **[Database & Cache Guide](docs/DATABASE.md)** | MongoDB Atlas `users` Mongoose schema, indexing, and Redis 10-min TTL caching strategy. |
-| 🔒 **[Security Policy](docs/SECURITY.md)** | Secret management, Firebase JWT authentication verification, rate limiting, and push protection. |
-| ☁️ **[Deployment Guide](docs/DEPLOYMENT.md)** | Production hosting setup on Render Cloud Platform, environment variables, and health probes. |
-| 📖 **[Developer Onboarding Guide](docs/DEVELOPER_GUIDE.md)** | Folder-by-folder breakdown, file explanations, and a 4-Week Developer Onboarding Roadmap. |
-| 🐞 **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** | Breakpoint setup, Pino JSON log filtering, common startup errors, and debugging recipes. |
+| 🏗️ **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | System architecture diagrams, Clean Architecture layers, request lifecycles, and domain class diagrams. |
+| 📱 **[FLUTTER_GUIDE.md](docs/FLUTTER_GUIDE.md)** | Flutter mobile app architecture (`Sarthe_AI/lib/`), Riverpod state management, GoRouter, and Nominatim debouncing. |
+| 🖥️ **[BACKEND_GUIDE.md](docs/BACKEND_GUIDE.md)** | Node.js Express REST API (`backend/src/`), dynamic calculation engines, provider adapters, and Render deployment. |
+| 📡 **[API_REFERENCE.md](docs/API_REFERENCE.md)** | Endpoint specifications, HTTP headers, response envelope schemas, and JSON request/response examples. |
+| 🗄️ **[DATABASE.md](docs/DATABASE.md)** | MongoDB Atlas `users` Mongoose schema, indexing, Redis 10-min TTL caching strategy, and memory fallback. |
+| 🔒 **[SECURITY.md](docs/SECURITY.md)** | Secret management, Firebase JWT authentication verification, rate limiting, and push protection. |
+| 📘 **[DEVELOPER_HANDBOOK.md](docs/DEVELOPER_HANDBOOK.md)** | Master developer onboarding manual, 4-week learning roadmap, file explanations, and troubleshooting guide. |
 
 ---
 
