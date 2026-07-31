@@ -119,6 +119,18 @@ const envSchema = z
     REDIS_URL: optionalUrl,
 
     // =========================================================================
+    // INTELLIGENCE & PROVIDER FLAGS
+    // =========================================================================
+
+    OVERPASS_API_URL: z.string().trim().default("https://overpass-api.de/api/interpreter"),
+
+    ENABLE_POI: booleanFromString.default(true),
+
+    ENABLE_WEATHER: booleanFromString.default(true),
+
+    ENABLE_GEMINI: booleanFromString.default(true),
+
+    // =========================================================================
     // AUTHENTICATION
     // =========================================================================
 

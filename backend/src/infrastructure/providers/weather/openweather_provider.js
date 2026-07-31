@@ -1,9 +1,24 @@
 import { IWeatherProvider } from './i_weather_provider.js';
 
 export class OpenWeatherProvider extends IWeatherProvider {
-  constructor(apiKey = process.env.OPENWEATHER_API_KEY || process.env.WEATHER_API_KEY) {
+  constructor(apiKey = process.env.OPENWEATHER_API_KEY || process.env.WEATHER_API_KEY, options = {}) {
     super();
+    this.id = 'openweather';
+    this.name = 'OpenWeatherMap Provider';
+    this.priority = 'optional';
+    this.dependencies = [];
+    this.timeoutMs = 3500;
+    this.cacheTtlSeconds = 3600;
+    this.version = '1.0.0';
+    this.isEnabled = options.isEnabled ?? (process.env.ENABLE_WEATHER !== 'false');
     this.apiKey = apiKey;
+  }
+
+  async execute(context) {
+    if (!context || context.originLat == null || context.originLng == null) {
+      return this.getWeatherAdvisory(28.6139, 77.2090);
+    }
+    return this.getWeatherAdvisory(context.originLat, context.originLng);
   }
 
   async getWeatherAdvisory(latitude, longitude) {

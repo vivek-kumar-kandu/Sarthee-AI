@@ -1,5 +1,6 @@
 import 'transit_hub.dart';
 import 'safety_profile.dart';
+import 'landmark.dart';
 
 enum StepType {
   walk,
@@ -28,6 +29,8 @@ class JourneyStep {
   final String? metroGateNumber;      // e.g. "Gate 2"
   final String? platformNumber;       // e.g. "Platform 1"
   final int? nextDepartureInMinutes;  // e.g. 4 (mins)
+  final Landmark? landmark;
+  final String? landmarkTip;
 
   const JourneyStep({
     required this.stepIndex,
@@ -45,6 +48,8 @@ class JourneyStep {
     this.metroGateNumber,
     this.platformNumber,
     this.nextDepartureInMinutes,
+    this.landmark,
+    this.landmarkTip,
   });
 
   factory JourneyStep.fromJson(Map<String, dynamic> json) {
@@ -61,6 +66,10 @@ class JourneyStep {
       metroGateNumber: json['metroGateNumber'] as String?,
       platformNumber: json['platformNumber'] as String?,
       nextDepartureInMinutes: (json['nextDepartureInMinutes'] as num?)?.toInt(),
+      landmark: json['landmark'] != null && json['landmark'] is Map<String, dynamic>
+          ? Landmark.fromJson(json['landmark'] as Map<String, dynamic>)
+          : null,
+      landmarkTip: json['landmarkTip'] as String?,
     );
   }
 

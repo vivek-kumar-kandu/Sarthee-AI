@@ -11,43 +11,40 @@ graph TD
     subgraph Client Layer [Flutter 3.x Cross-Platform Mobile App]
         UI[Flutter UI / Responsive Widgets]
         RP[Riverpod 2.6 StateNotifier]
-        DIO[Dio HTTP Client & GoRouter 14]
+        MAP[Sarthee Leaflet Map Widget]
     end
 
     subgraph Gateway Layer [Node.js Express v5 API]
         GW[Express Gateway Router /api/v1]
-        MW[Rate Limiting / CORS / Security Headers]
-        AUTH_MW[Firebase Auth Middleware]
         CTRL[JourneyPlanController]
     end
 
-    subgraph Application & Domain Layer [Clean Architecture Core]
+    subgraph Orchestration & Intelligence Layer [Clean Architecture Core]
         UC[PlanJourneyUseCase]
-        MMGS[MultiModalGraphSearchService]
-        DFE[Dynamic Fare Engine]
-        DSE[Dynamic Safety Engine]
+        JIO[JourneyIntelligenceOrchestrator]
+        REG[JourneyProviderRegistry]
+        JAS[JourneyAdvisorService]
+        JC[Immutable JourneyContext]
     end
 
     subgraph Infrastructure & External Services
         REDIS[(Redis Cache / Memory Fallback)]
-        MONGO[(MongoDB Atlas Users Database)]
-        OSRM[OSRM Public Routing API]
+        OSRM[OSRM GeoJSON Routing Engine]
+        OVERPASS[OpenStreetMap Overpass POI API]
         OWM[OpenWeatherMap API]
-        GEMINI[Google Gemini 2.0 Flash API]
+        GEMINI[Google Gemini 2.0 Flash AI]
     end
 
-    UI --> RP --> DIO
-    DIO -->|POST /api/v1/journey/plan| GW
-    GW --> MW --> AUTH_MW --> CTRL
-    CTRL --> UC
-    UC -->|1. Check Cache| REDIS
-    UC -->|2. Compute Route| MMGS
-    MMGS --> DFE
-    MMGS --> DSE
-    MMGS --> OSRM
-    UC -->|3. Weather Advisory| OWM
-    UC -->|4. Grounded AI Rationale| GEMINI
-    GW -->|Sync User Profile| MONGO
+    UI --> RP --> MAP
+    UI -->|POST /api/v1/journey/plan| GW --> CTRL --> UC
+    UC -->|Check Cache| REDIS
+    UC --> JIO --> REG
+    REG -->|Core Engine| OSRM
+    REG -->|Optional POI| OVERPASS
+    REG -->|Optional Weather| OWM
+    REG --> JC
+    JC --> JAS --> GEMINI
+    JC & JAS --> CTRL
 ```
 
 ---

@@ -127,6 +127,33 @@ class StepDetailTile extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (step.landmarkTip != null && step.landmarkTip!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.storefront_rounded, size: 15, color: Colors.amber.shade900),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            step.landmarkTip!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
