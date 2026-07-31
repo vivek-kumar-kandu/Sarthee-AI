@@ -1,7 +1,38 @@
 ########################################
-# Flutter
+# Sarthee AI — Enterprise .gitignore
 ########################################
 
+# --------------------------------------
+# Security & Environment Variables
+# --------------------------------------
+**/.env
+**/.env.*
+!.env.example
+**/secrets/
+**/secret/
+**/ecrets*
+**/*service-account*.json
+**/*service_account*.json
+**/*serviceAccount*.json
+**/*firebase-adminsdk*.json
+**/*private*.key
+**/*.pem
+**/*.crt
+**/*.key
+**/*credentials*.json
+**/*api-key*.json
+**/*apikey*.json
+
+# --------------------------------------
+# Firebase & Platform Configurations
+# --------------------------------------
+**/GoogleService-Info.plist
+**/google-services.json
+!Sarthe_AI/firebase.json
+
+# --------------------------------------
+# Flutter & Dart
+# --------------------------------------
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
@@ -9,111 +40,91 @@
 **/.pub/
 **/.pub-cache/
 **/build/
+sarthee_ai.iml
+*.iml
 
-########################################
+# --------------------------------------
 # Android
-########################################
-
+# --------------------------------------
 **/android/.gradle/
 **/android/local.properties
 **/android/app/debug/
 **/android/app/profile/
 **/android/app/release/
+**/android/app/key.jks
+**/android/app/keystore.jks
 
-########################################
-# iOS
-########################################
-
+# --------------------------------------
+# iOS & macOS
+# --------------------------------------
 **/ios/Pods/
 **/ios/.symlinks/
 **/ios/Flutter/ephemeral/
 **/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner.xcworkspace/
+**/*.xcodeproj/
+**/*.xcworkspace/
 
-########################################
-# Node.js
-########################################
-
+# --------------------------------------
+# Node.js Backend
+# --------------------------------------
 **/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-########################################
-# Environment Files & Secrets (SECURITY)
-########################################
+# --------------------------------------
+# Python Caches & Environments
+# --------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
 
-**/.env
-**/.env.local
-**/.env.production
-**/.env.development
-**/.env.staging
-**/.env.test
-
-########################################
-# Secrets & Credentials
-########################################
-
-**/secrets/
-**/*serviceAccount*.json
-**/*firebase-adminsdk*.json
-**/*private*.key
-**/*.pem
-**/*.crt
-
-########################################
-# Firebase & Android Secrets
-########################################
-
-**/GoogleService-Info.plist
-**/google-services.json
-
-########################################
-# Logs
-########################################
-
+# --------------------------------------
+# Logs & Diagnostic Dumps
+# --------------------------------------
 **/logs/
 *.log
+flutter_*.log
+npm-debug.log
 
-########################################
-# Coverage
-########################################
-
+# --------------------------------------
+# Test Coverage & Caching
+# --------------------------------------
 coverage/
-
-########################################
-# Cache
-########################################
-
 .cache/
+.pytest_cache/
 
-########################################
-# IDE
-########################################
-
+# --------------------------------------
+# IDE & Editor Configurations
+# --------------------------------------
 .idea/
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
-
-########################################
-# OS
-########################################
-
-.DS_Store
-Thumbs.db
-
-########################################
-# Temp & Local Artifacts
-########################################
-
-*.tmp
-*.bak
 *.swp
+*.swo
 
-########################################
-# Generated Local Manuals (PDF & Word)
-########################################
+# --------------------------------------
+# OS Generated Files
+# --------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
+# --------------------------------------
+# Generated Binary & Large Local Docs
+# --------------------------------------
 *.pdf
 *.docx
+*.tmp
+*.bak
