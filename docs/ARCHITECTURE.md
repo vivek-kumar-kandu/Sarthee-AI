@@ -23,6 +23,8 @@ graph TD
         UC[PlanJourneyUseCase]
         JIO[JourneyIntelligenceOrchestrator]
         REG[JourneyProviderRegistry]
+        DFE[DynamicFareEngine - Peak/Rain/Night Multipliers]
+        RRE[RouteRankingEngine - Weighted Score Re-Ranker]
         JAS[JourneyAdvisorService]
         JC[Immutable JourneyContext]
     end
@@ -42,7 +44,9 @@ graph TD
     REG -->|Core Engine| OSRM
     REG -->|Optional POI| OVERPASS
     REG -->|Optional Weather| OWM
-    REG --> JC
+    OSRM & OWM --> DFE
+    DFE & OWM --> RRE
+    RRE --> JC
     JC --> JAS --> GEMINI
     JC & JAS --> CTRL
 ```
@@ -158,6 +162,29 @@ classDiagram
 
     PlanJourneyUseCase --> MultiModalGraphSearchService
     PlanJourneyUseCase --> GeminiAiProvider
-    PlanJourneyUseCase --> OpenWeatherProvider
     MultiModalGraphSearchService --> OsrmRoutingProvider
+    MultiModalGraphSearchService --> OpenWeatherProvider
 ```
+
+---
+
+## 📌 5. Phase 1 Dynamic Intelligence Engines & Active Guidance
+
+### 5.1 DynamicFareEngine
+Dedicated domain engine calculating time-of-day and weather surge multipliers:
+- **Peak Hour Multiplier (`1.15x`)**: Active during morning (8–10 AM) and evening (5–8 PM) rush hours.
+- **Rain Surge Multiplier (`1.25x`)**: Applied when monsoon rain/drizzle is reported.
+- **Night Fare Multiplier (`1.25x`)**: Applied between 11 PM and 5 AM.
+
+### 5.2 RouteRankingEngine & Weighted Scoring Formula
+Calculates a composite recommendation score ($0 - 100$) for every candidate route profile:
+$$\text{Score} = (\text{Time} \times 0.40) + (\text{Cost} \times 0.20) + (\text{Weather} \times 0.20) + (\text{Safety} \times 0.15) + (\text{Walking} \times 0.05)$$
+
+- **Rain Re-Ranking**: Penalizes open walking (>250m) and open e-rickshaws, automatically promoting **Covered Metro Rail** as the top recommended route option.
+- **Heat Re-Ranking**: Triggers when temperature $\ge 38^\circ\text{C}$, penalizing unshaded walking (>300m) and promoting AC transit.
+
+### 5.3 Active Trip Guidance (MVP)
+Flutter UI component (`ActiveTripGuidanceWidget.dart`) providing real-time trip execution state:
+- Live leg progress bar (`LinearProgressIndicator`).
+- Current step milestone details with OpenStreetMap landmark tips.
+- Next arrival milestone alerts and completion controls (`▶`).

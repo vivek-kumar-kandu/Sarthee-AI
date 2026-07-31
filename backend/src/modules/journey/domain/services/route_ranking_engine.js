@@ -1,60 +1,138 @@
 /**
  * RouteRankingEngine
- * Deterministic weather and safety-aware route re-ranking engine
+ * Configurable, weighted route ranking engine for travel recommendations
  */
 export class RouteRankingEngine {
+  static DEFAULT_CONFIG = {
+    heatThreshold: 38,
+    maxWalkRainMeters: 250,
+    maxWalkHeatMeters: 300,
+    rainWalkPenalty: 0.4,
+    erickshawRainPenalty: 0.3,
+    weights: {
+      time: 0.40,
+      cost: 0.20,
+      weather: 0.20,
+      safety: 0.15,
+      walking: 0.05,
+    },
+  };
+
+  constructor(config = {}) {
+    this.config = {
+      ...RouteRankingEngine.DEFAULT_CONFIG,
+      ...config,
+      weights: {
+        ...RouteRankingEngine.DEFAULT_CONFIG.weights,
+        ...(config.weights || {}),
+      },
+    };
+  }
+
   /**
-   * Re-ranks and optimizes journey plan options based on real-time weather and contextual conditions
-   * @param {Object} plans Keyed map of journey plans ({ recommended, balanced, fastest, cheapest, ... })
-   * @param {Object|null} weather Weather advisory object ({ condition, tempCelsius, isRainExpected })
-   * @param {number} hourOfDay Current hour of day (0-23)
-   * @returns {Object} Optimized and re-ranked plans object
+   * Calculates a composite recommendation score for a given journey plan
+   * @param {Object} plan Journey plan object
+   * @param {Object|null} weather Weather advisory object
+   * @param {number} hourOfDay Current hour of day
+   * @returns {number} Score from 0 to 100
    */
-  static reRankPlans(plans = {}, weather = null, hourOfDay = new Date().getHours()) {
+  calculateRouteScore(plan, weather = null, hourOfDay = new Date().getHours()) {
+    if (!plan) return 0;
+
+    const isRain = weather?.isRainExpected || weather?.condition?.toLowerCase()?.includes('rain') || false;
+    const tempCelsius = weather?.tempCelsius ?? 28;
+    const isFog = weather?.condition?.toLowerCase()?.includes('fog') || weather?.condition?.toLowerCase()?.includes('mist') || false;
+
+    // 1. Time Score (Normalized: 60 mins = 50 pts, 20 mins = 100 pts)
+    const timeMins = plan.totalDurationMinutes || 40;
+    const timeScore = Math.max(10, Math.min(100, 100 - (timeMins - 20) * 1.5));
+
+    // 2. Cost Score (Normalized: ₹500 = 20 pts, ₹50 = 100 pts)
+    const cost = plan.totalCost || 100;
+    const costScore = Math.max(10, Math.min(100, 100 - (cost - 50) * 0.18));
+
+    // 3. Safety Score (Direct 0-100 value)
+    const safetyScore = plan.compositeSafetyScore || 85;
+
+    // 4. Walking Score (Normalized: 1500m = 10 pts, 100m = 100 pts)
+    const walkMeters = plan.totalWalkingDistanceMeters || 300;
+    let walkScore = Math.max(10, Math.min(100, 100 - (walkMeters - 100) * 0.06));
+
+    // 5. Weather & Comfort Score
+    let weatherScore = 90;
+    if (isRain) {
+      if (walkMeters > this.config.maxWalkRainMeters) {
+        weatherScore -= 30 * this.config.rainWalkPenalty;
+      }
+      const hasOpenRickshaw = (plan.steps || []).some((s) => s.type === 'eRickshaw' || s.type === 'auto');
+      if (hasOpenRickshaw) {
+        weatherScore -= 20 * this.config.erickshawRainPenalty;
+      }
+    }
+
+    if (tempCelsius >= this.config.heatThreshold && walkMeters > this.config.maxWalkHeatMeters) {
+      weatherScore -= 25;
+    }
+
+    if (isFog) {
+      weatherScore -= 15;
+    }
+
+    // Weighted Formula
+    const totalScore =
+      timeScore * this.config.weights.time +
+      costScore * this.config.weights.cost +
+      weatherScore * this.config.weights.weather +
+      safetyScore * this.config.weights.safety +
+      walkScore * this.config.weights.walking;
+
+    return parseFloat(totalScore.toFixed(1));
+  }
+
+  /**
+   * Re-ranks plans based on weighted scoring formula and returns optimal recommendations
+   * @param {Object} plans Keyed map of journey plans
+   * @param {Object|null} weather Weather advisory object
+   * @param {number} hourOfDay Current hour of day
+   * @returns {Object} Re-ranked journey plans
+   */
+  reRankPlans(plans = {}, weather = null, hourOfDay = new Date().getHours()) {
     if (!plans || Object.keys(plans).length === 0) {
       return plans;
     }
 
     const updatedPlans = { ...plans };
-    const isRain = weather?.isRainExpected || weather?.condition?.toLowerCase()?.includes('rain') || false;
-    const tempCelsius = weather?.tempCelsius ?? 28;
-    const isNight = hourOfDay >= 23 || hourOfDay < 5;
+    let bestPlanKey = null;
+    let highestScore = -1;
 
-    // Rule 1: Rain Re-Ranking
-    // Demote long walking legs (>250m) & open e-rickshaws, boost Covered Metro Rail
-    if (isRain) {
-      if (updatedPlans.balanced) {
-        // Swap recommended plan to Metro-focused balanced/safe plan
-        updatedPlans.recommended = {
-          ...updatedPlans.balanced,
-          id: 'plan_rec_rain_01',
-          aiRationale: `${updatedPlans.balanced.aiRationale || ''} ☔ Rain advisory active: Metro Rail promoted to #1 plan for weather protection.`,
-        };
+    for (const [key, plan] of Object.entries(updatedPlans)) {
+      const score = this.calculateRouteScore(plan, weather, hourOfDay);
+      plan.recommendationScore = score;
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestPlanKey = key;
       }
     }
 
-    // Rule 2: Extreme Heat Re-Ranking (>38°C)
-    // Demote unshaded walking (>300m), promote AC Transit & Cab
-    if (tempCelsius >= 38) {
-      if (updatedPlans.fastest) {
-        updatedPlans.recommended = {
-          ...updatedPlans.fastest,
-          id: 'plan_rec_heat_01',
-          aiRationale: `${updatedPlans.fastest.aiRationale || ''} ☀️ High heat warning (${tempCelsius}°C): AC taxi/transit promoted to minimize outdoor exposure.`,
-        };
-      }
-    }
+    if (bestPlanKey && updatedPlans[bestPlanKey]) {
+      const topPlan = updatedPlans[bestPlanKey];
+      const isRain = weather?.isRainExpected || weather?.condition?.toLowerCase()?.includes('rain') || false;
+      const tempCelsius = weather?.tempCelsius ?? 28;
 
-    // Rule 3: Late Night Re-Ranking (11 PM - 5 AM)
-    // Boost high-safety well-lit arterial routes
-    if (isNight) {
-      if (updatedPlans.safest) {
-        updatedPlans.recommended = {
-          ...updatedPlans.safest,
-          id: 'plan_rec_night_01',
-          aiRationale: `${updatedPlans.safest.aiRationale || ''} 🌙 Late night route: Prioritizing well-lit CCTV-monitored arterial transit hubs.`,
-        };
+      let rationale = topPlan.aiRationale || '';
+      if (isRain) {
+        rationale += ` ☔ Weather Advisory: Ranked #1 optimal plan (Score: ${highestScore}/100) prioritizing weather protection.`;
+      } else if (tempCelsius >= this.config.heatThreshold) {
+        rationale += ` ☀️ Heat Warning (${tempCelsius}°C): Ranked #1 optimal plan (Score: ${highestScore}/100) minimizing high temperature outdoor exposure.`;
       }
+
+      updatedPlans.recommended = {
+        ...topPlan,
+        id: `plan_rec_ranked_${topPlan.mode}`,
+        mode: 'recommended',
+        aiRationale: rationale.trim(),
+      };
     }
 
     return updatedPlans;

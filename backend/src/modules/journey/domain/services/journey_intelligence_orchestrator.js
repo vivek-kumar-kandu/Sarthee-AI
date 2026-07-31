@@ -12,6 +12,7 @@ export class JourneyIntelligenceOrchestrator {
     this.registry = options.registry || new JourneyProviderRegistry();
     this.graphSearchService = options.graphSearchService || new MultiModalGraphSearchService();
     this.advisorService = options.advisorService || new JourneyAdvisorService();
+    this.routeRankingEngine = options.routeRankingEngine || new RouteRankingEngine();
 
     // Register Default Providers
     const poiEnabled = process.env.ENABLE_POI !== 'false';
@@ -61,7 +62,7 @@ export class JourneyIntelligenceOrchestrator {
     }
 
     // Apply Deterministic Route Re-Ranking based on Weather & Time
-    const rankedPlans = RouteRankingEngine.reRankPlans(plans, weatherAdvisory);
+    const rankedPlans = this.routeRankingEngine.reRankPlans(plans, weatherAdvisory);
 
     const orchestrationTimeMs = Date.now() - startTime;
 
