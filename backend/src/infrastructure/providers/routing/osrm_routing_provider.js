@@ -13,7 +13,7 @@ export class OsrmRoutingProvider extends IRoutingProvider {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout guardrail
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5.0s timeout guardrail
 
       const response = await fetch(url, {
         signal: controller.signal,

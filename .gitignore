@@ -40,25 +40,29 @@ yarn-error.log*
 pnpm-debug.log*
 
 ########################################
-# Environment Files
+# Environment Files & Secrets (SECURITY)
 ########################################
 
 **/.env
 **/.env.local
 **/.env.production
 **/.env.development
+**/.env.staging
+**/.env.test
 
 ########################################
-# Secrets
+# Secrets & Credentials
 ########################################
 
 **/secrets/
 **/*serviceAccount*.json
 **/*firebase-adminsdk*.json
 **/*private*.key
+**/*.pem
+**/*.crt
 
 ########################################
-# Firebase
+# Firebase & Android Secrets
 ########################################
 
 **/GoogleService-Info.plist
@@ -100,9 +104,16 @@ coverage/
 Thumbs.db
 
 ########################################
-# Temp
+# Temp & Local Artifacts
 ########################################
 
 *.tmp
 *.bak
 *.swp
+
+########################################
+# Generated Local Manuals (PDF & Word)
+########################################
+
+*.pdf
+*.docx

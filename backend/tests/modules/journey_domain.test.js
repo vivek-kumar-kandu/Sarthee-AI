@@ -20,9 +20,9 @@ describe('Layer 3: Backend Clean Architecture Domain Layer', () => {
     assert.throws(() => new FareSummaryVO(-10.0), /Cannot be negative/);
   });
 
-  test('MultiModalGraphSearchService should return 8 keyed journey plan options', () => {
+  test('MultiModalGraphSearchService should return 8 keyed journey plan options', async () => {
     const service = new MultiModalGraphSearchService();
-    const plans = service.generateKeyedPlans('Ghaziabad', 28.6715, 77.4121, 'Delhi', 28.6328, 77.2197);
+    const plans = await service.generateKeyedPlans('Ghaziabad', 28.6715, 77.4121, 'Delhi', 28.6328, 77.2197);
 
     assert.ok(plans.recommended);
     assert.ok(plans.balanced);

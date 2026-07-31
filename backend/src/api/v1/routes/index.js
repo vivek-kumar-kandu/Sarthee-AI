@@ -3,6 +3,7 @@ import { Router } from "express";
 import healthRoutes from "./health.routes.js";
 import homeRoutes from "./home.routes.js";
 import authRoutes from "../../../modules/auth/auth.routes.js";
+import { createJourneyRouter } from "../../../modules/journey/presentation/routes/journey_routes.js";
 
 /**
  * ============================================================================
