@@ -47,12 +47,8 @@ export class PlanJourneyUseCase {
 
     const { context, aiRationale } = await this.orchestrator.orchestrate(dto);
 
-    // Return plans map with attached rationale and metadata
-    const responsePayload = {
-      ...context.plans,
-      weatherSummary: context.weather ? { advisory: context.weather.advisory } : null,
-      originLandmark: context.originLandmark ? { name: context.originLandmark.name, landmarkTip: context.originLandmark.landmarkTip } : null,
-    };
+    // 3. Map to Clean Response DTO
+    const responsePayload = JourneyResponseMapper.toResponseDTO(context, aiRationale);
 
     // 4. Save to Redis Cache (10-min TTL)
     await this.cacheService.set(cacheKey, responsePayload, 600);

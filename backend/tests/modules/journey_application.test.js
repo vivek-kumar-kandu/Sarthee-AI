@@ -32,9 +32,10 @@ describe('Layer 4: Backend Clean Architecture Application Layer', () => {
       destinationLng: 77.2197,
     });
 
-    const plans = await useCase.execute(dto);
+    const result = await useCase.execute(dto);
+    const plansMap = result.plans || result;
 
-    assert.ok(plans.balanced);
-    assert.ok(plans.balanced.aiRationale.includes('Ghaziabad'));
+    assert.ok(plansMap.balanced);
+    assert.ok(plansMap.balanced.aiRationale.includes('Ghaziabad'));
   });
 });

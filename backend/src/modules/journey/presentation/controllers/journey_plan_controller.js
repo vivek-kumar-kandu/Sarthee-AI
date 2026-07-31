@@ -13,7 +13,8 @@ export class JourneyPlanController {
       const dto = new JourneyPlanRequestDTO(req.body || {});
       const keyedPlans = await this.planJourneyUseCase.execute(dto);
 
-      const envelope = formatSuccessResponse({ plans: keyedPlans }, {}, requestId);
+      const dataPayload = keyedPlans.plans ? keyedPlans : { plans: keyedPlans };
+      const envelope = formatSuccessResponse(dataPayload, {}, requestId);
       if (res && typeof res.status === 'function') {
         return res.status(200).json(envelope);
       }
