@@ -2,6 +2,7 @@ import 'journey_step.dart';
 import 'fare_summary.dart';
 
 enum RecommendationMode {
+  all,
   recommended,
   fastest,
   cheapest,

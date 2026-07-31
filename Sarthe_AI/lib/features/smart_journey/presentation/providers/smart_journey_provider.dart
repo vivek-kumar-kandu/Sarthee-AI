@@ -65,6 +65,7 @@ class SmartJourneyState {
 
   JourneyPlan? get selectedPlan {
     if (plans.isEmpty) return null;
+    if (selectedMode == RecommendationMode.all) return plans.first;
     try {
       return plans.firstWhere((p) => p.mode == selectedMode);
     } catch (_) {

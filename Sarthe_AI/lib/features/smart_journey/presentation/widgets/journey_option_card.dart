@@ -15,6 +15,8 @@ class JourneyOptionCard extends StatelessWidget {
 
   String _getModeLabel(RecommendationMode mode) {
     switch (mode) {
+      case RecommendationMode.all:
+        return "✨ Option";
       case RecommendationMode.recommended:
         return "🌟 Recommended";
       case RecommendationMode.fastest:
@@ -36,6 +38,8 @@ class JourneyOptionCard extends StatelessWidget {
 
   Color _getModeColor(RecommendationMode mode) {
     switch (mode) {
+      case RecommendationMode.all:
+        return const Color(0xFF6366F1);
       case RecommendationMode.recommended:
         return const Color(0xFF6750A4);
       case RecommendationMode.fastest:
@@ -53,6 +57,58 @@ class JourneyOptionCard extends StatelessWidget {
       case RecommendationMode.comfort:
         return const Color(0xFF7C3AED);
     }
+  }
+
+  Widget _buildStepIconPills(List steps, bool isDark) {
+    if (steps.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: steps.map((s) {
+          IconData icon = Icons.directions_walk_rounded;
+          Color color = Colors.grey;
+
+          if (s.type.toString().contains('auto') || s.type.toString().contains('eRickshaw')) {
+            icon = Icons.electric_rickshaw_rounded;
+            color = const Color(0xFFF59E0B);
+          } else if (s.type.toString().contains('metro')) {
+            icon = Icons.subway_rounded;
+            color = const Color(0xFFDC2626);
+          } else if (s.type.toString().contains('bus')) {
+            icon = Icons.directions_bus_rounded;
+            color = const Color(0xFF2563EB);
+          } else if (s.type.toString().contains('cab')) {
+            icon = Icons.local_taxi_rounded;
+            color = const Color(0xFF0D9488);
+          }
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 12, color: color),
+                if (s.durationMinutes > 0) ...[
+                  const SizedBox(width: 3),
+                  Text(
+                    "${s.durationMinutes}m",
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: color),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   @override
@@ -157,6 +213,7 @@ class JourneyOptionCard extends StatelessWidget {
                 ),
               ],
             ),
+            _buildStepIconPills(plan.steps, isDark),
           ],
         ),
       ),

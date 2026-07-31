@@ -222,7 +222,39 @@ class _SmartJourneyPlannerPageState extends ConsumerState<SmartJourneyPlannerPag
                       ),
                     ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
+
+                  // Swap Locations Button
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      onPressed: () {
+                        final tempText = _originController.text;
+                        _originController.text = _destController.text;
+                        _destController.text = tempText;
+
+                        final tempLat = _selectedOriginLat;
+                        final tempLng = _selectedOriginLng;
+                        _selectedOriginLat = _selectedDestLat;
+                        _selectedOriginLng = _selectedDestLng;
+                        _selectedDestLat = tempLat;
+                        _selectedDestLng = tempLng;
+
+                        setState(() {});
+                      },
+                      icon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.swap_vert_rounded, size: 18, color: Color(0xFF4F46E5)),
+                      ),
+                      tooltip: "Swap Origin & Destination",
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
 
                   // Destination TextField
                   TextField(
@@ -357,6 +389,7 @@ class _SmartJourneyPlannerPageState extends ConsumerState<SmartJourneyPlannerPag
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  _buildChoiceChip(context, notifier, RecommendationMode.all, "✨ All Routes", state.selectedMode),
                   _buildChoiceChip(context, notifier, RecommendationMode.recommended, "🌟 Recommended", state.selectedMode),
                   _buildChoiceChip(context, notifier, RecommendationMode.fastest, "⚡ Fastest", state.selectedMode),
                   _buildChoiceChip(context, notifier, RecommendationMode.cheapest, "💰 Cheapest", state.selectedMode),
@@ -371,15 +404,29 @@ class _SmartJourneyPlannerPageState extends ConsumerState<SmartJourneyPlannerPag
 
             const SizedBox(height: 16),
 
-            // Selected Journey Card Details
-            if (state.selectedPlan != null)
-              JourneyOptionCard(
-                plan: state.selectedPlan!,
-                isSelected: true,
-                onTap: () {
-                  context.push('/journey-details', extra: state.selectedPlan);
-                },
-              ),
+            // Journey Card Details (All Routes or Selected Mode)
+            if (state.plans.isNotEmpty) ...[
+              if (state.selectedMode == RecommendationMode.all)
+                Column(
+                  children: state.plans.map((p) {
+                    return JourneyOptionCard(
+                      plan: p,
+                      isSelected: true,
+                      onTap: () {
+                        context.push('/journey-details', extra: p);
+                      },
+                    );
+                  }).toList(),
+                )
+              else if (state.selectedPlan != null)
+                JourneyOptionCard(
+                  plan: state.selectedPlan!,
+                  isSelected: true,
+                  onTap: () {
+                    context.push('/journey-details', extra: state.selectedPlan);
+                  },
+                ),
+            ],
           ],
         ),
       ),
