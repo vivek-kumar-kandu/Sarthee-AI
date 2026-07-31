@@ -22,13 +22,6 @@ class HomeNotifier extends AsyncNotifier<HomeEntity> {
   Future<HomeEntity> build() async {
     _repository = ref.watch(homeRepositoryProvider);
 
-    // 1. Instant 10ms Cache Load
-    final cached = await _repository.getCachedHomeData();
-    if (cached != null) {
-      state = AsyncValue.data(cached);
-    }
-
-    // 2. Background Sync for Fresh Data
     final profile = ref.watch(profileProvider).value;
     final freshData = await _repository.getHomeData();
 

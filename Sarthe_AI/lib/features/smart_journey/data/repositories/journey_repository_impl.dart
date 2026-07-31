@@ -8,9 +8,14 @@ import '../../domain/entities/safety_profile.dart';
 import '../../domain/entities/route_alert.dart';
 import '../../domain/repositories/i_journey_repository.dart';
 import '../datasources/local_transit_datasource.dart';
+import '../datasources/remote_journey_datasource.dart';
 
 class JourneyRepositoryImpl implements IJourneyRepository {
+  final RemoteJourneyDatasource _remoteDatasource;
   JourneySession? _cachedActiveSession;
+
+  JourneyRepositoryImpl({RemoteJourneyDatasource? remoteDatasource})
+      : _remoteDatasource = remoteDatasource ?? RemoteJourneyDatasource();
 
   @override
   Future<List<JourneyPlan>> planJourney({
@@ -21,8 +26,43 @@ class JourneyRepositoryImpl implements IJourneyRepository {
     required double destinationLat,
     required double destinationLng,
   }) async {
-    // Simulate slight async network/data latency
-    await Future.delayed(const Duration(milliseconds: 300));
+    try {
+      // 1. Live Remote Execution via Backend API (POST /api/v1/journey/plan)
+      final remotePlans = await _remoteDatasource.planJourney(
+        originName: originName,
+        originLat: originLat,
+        originLng: originLng,
+        destinationName: destinationName,
+        destinationLat: destinationLat,
+        destinationLng: destinationLng,
+      );
+
+      if (remotePlans.isNotEmpty) {
+        return remotePlans;
+      }
+    } catch (_) {
+      // Fallback to local computational graph if backend is offline/unreachable
+    }
+
+    // 2. Offline / Local Fallback Execution
+    return _buildFallbackJourneyPlans(
+      originName: originName,
+      originLat: originLat,
+      originLng: originLng,
+      destinationName: destinationName,
+      destinationLat: destinationLat,
+      destinationLng: destinationLng,
+    );
+  }
+
+  List<JourneyPlan> _buildFallbackJourneyPlans({
+    required String originName,
+    required double originLat,
+    required double originLng,
+    required String destinationName,
+    required double destinationLat,
+    required double destinationLng,
+  }) {
 
     final metroStart = LocalTransitDatasource.dmrcStations.first;
     final metroEnd = LocalTransitDatasource.dmrcStations[1]; // Rajiv Chowk

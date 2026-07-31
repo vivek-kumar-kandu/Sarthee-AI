@@ -46,4 +46,44 @@ class JourneyStep {
     this.platformNumber,
     this.nextDepartureInMinutes,
   });
+
+  factory JourneyStep.fromJson(Map<String, dynamic> json) {
+    return JourneyStep(
+      stepIndex: (json['stepIndex'] as num?)?.toInt() ?? 1,
+      type: _parseStepType(json['type'] as String?),
+      title: json['title'] as String? ?? 'Travel Step',
+      instruction: json['instruction'] as String? ?? '',
+      distanceMeters: (json['distanceMeters'] as num?)?.toDouble() ?? 0.0,
+      durationMinutes: (json['durationMinutes'] as num?)?.toInt() ?? 0,
+      estimatedFare: (json['estimatedFare'] as num?)?.toDouble() ?? 0.0,
+      farePaymentMethod: json['farePaymentMethod'] as String? ?? 'UPI/Cash',
+      metroLineColor: json['metroLineColor'] as String?,
+      metroGateNumber: json['metroGateNumber'] as String?,
+      platformNumber: json['platformNumber'] as String?,
+      nextDepartureInMinutes: (json['nextDepartureInMinutes'] as num?)?.toInt(),
+    );
+  }
+
+  static StepType _parseStepType(String? typeStr) {
+    switch (typeStr) {
+      case 'walk':
+        return StepType.walk;
+      case 'auto':
+        return StepType.auto;
+      case 'eRickshaw':
+        return StepType.eRickshaw;
+      case 'sharedAuto':
+        return StepType.sharedAuto;
+      case 'metro':
+        return StepType.metro;
+      case 'bus':
+        return StepType.bus;
+      case 'cab':
+        return StepType.cab;
+      case 'train':
+        return StepType.train;
+      default:
+        return StepType.walk;
+    }
+  }
 }

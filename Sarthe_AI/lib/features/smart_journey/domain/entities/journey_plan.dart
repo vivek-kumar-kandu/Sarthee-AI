@@ -46,4 +46,50 @@ class JourneyPlan {
     required this.fareSummary,
     required this.aiRationale,
   });
+
+  factory JourneyPlan.fromJson(Map<String, dynamic> json) {
+    return JourneyPlan(
+      id: json['id'] as String? ?? 'plan_01',
+      originName: json['originName'] as String? ?? 'Origin',
+      destinationName: json['destinationName'] as String? ?? 'Destination',
+      originLat: (json['originLat'] as num?)?.toDouble() ?? 0.0,
+      originLng: (json['originLng'] as num?)?.toDouble() ?? 0.0,
+      destinationLat: (json['destinationLat'] as num?)?.toDouble() ?? 0.0,
+      destinationLng: (json['destinationLng'] as num?)?.toDouble() ?? 0.0,
+      mode: _parseMode(json['mode'] as String?),
+      totalDurationMinutes: (json['totalDurationMinutes'] as num?)?.toInt() ?? 0,
+      totalCost: (json['totalCost'] as num?)?.toDouble() ?? 0.0,
+      totalWalkingDistanceMeters: (json['totalWalkingDistanceMeters'] as num?)?.toDouble() ?? 0.0,
+      compositeSafetyScore: (json['compositeSafetyScore'] as num?)?.toInt() ?? 80,
+      steps: (json['steps'] as List<dynamic>?)
+              ?.map((s) => JourneyStep.fromJson(s as Map<String, dynamic>))
+              .toList() ??
+          [],
+      fareSummary: json['fareSummary'] != null
+          ? FareSummary.fromJson(json['fareSummary'] as Map<String, dynamic>)
+          : const FareSummary(totalAmount: 0, items: []),
+      aiRationale: json['aiRationale'] as String? ?? 'Sarthee AI Journey Recommendation',
+    );
+  }
+
+  static RecommendationMode _parseMode(String? str) {
+    switch (str) {
+      case 'recommended':
+        return RecommendationMode.recommended;
+      case 'fastest':
+        return RecommendationMode.fastest;
+      case 'cheapest':
+        return RecommendationMode.cheapest;
+      case 'safest':
+        return RecommendationMode.safest;
+      case 'accessible':
+        return RecommendationMode.accessible;
+      case 'eco':
+        return RecommendationMode.eco;
+      case 'comfort':
+        return RecommendationMode.comfort;
+      default:
+        return RecommendationMode.balanced;
+    }
+  }
 }
