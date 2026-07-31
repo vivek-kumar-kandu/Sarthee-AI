@@ -42,19 +42,31 @@ class _SartheeLeafletMapWidgetState extends State<SartheeLeafletMapWidget> {
   }
 
   void _initMapData() {
-    _originLatLng = LatLng(widget.plan.originLat, widget.plan.originLng);
-    _destLatLng = LatLng(widget.plan.destinationLat, widget.plan.destinationLng);
+    final origin = LatLng(widget.plan.originLat, widget.plan.originLng);
+    final dest = LatLng(widget.plan.destinationLat, widget.plan.destinationLng);
 
-    // Decode backend OSRM polyline string
+    // Decode backend OSRM polyline string or GeoJSON coordinates
     final decoded = PolylineUtils.decodePolyline(widget.plan.polyline);
-    if (decoded.isNotEmpty) {
-      _routePoints = decoded;
+    final points = decoded.isNotEmpty
+        ? decoded
+        : PolylineUtils.generateFallbackRoute(origin, dest);
+
+    if (mounted) {
+      setState(() {
+        _originLatLng = origin;
+        _destLatLng = dest;
+        _routePoints = points;
+      });
     } else {
-      _routePoints = PolylineUtils.generateFallbackRoute(_originLatLng, _destLatLng);
+      _originLatLng = origin;
+      _destLatLng = dest;
+      _routePoints = points;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fitMapBounds();
+      if (mounted) {
+        _fitMapBounds();
+      }
     });
   }
 
