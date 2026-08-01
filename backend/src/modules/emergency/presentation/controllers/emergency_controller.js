@@ -1,4 +1,4 @@
-import { emergencyService } from '../domain/services/emergency_service.js';
+import { emergencyService } from '../../domain/services/emergency_service.js';
 import { logger } from '../../../../config/logger.js';
 
 /**
