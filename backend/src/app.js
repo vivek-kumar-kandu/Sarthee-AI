@@ -18,6 +18,9 @@ import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
+import { serveSwaggerUi, setupSwaggerUi } from "./config/swagger.js";
+
+
 /**
  * ============================================================================
  * SARTHEE AI — EXPRESS APPLICATION
@@ -120,10 +123,13 @@ app.get("/favicon.ico", (req, res) => {
 });
 
 // =============================================================================
-// API
+// API & DOCUMENTATION
 // =============================================================================
 
+app.use("/docs", serveSwaggerUi, setupSwaggerUi);
+
 app.use(env.server.apiPrefix, apiV1Router);
+
 
 // =============================================================================
 // FALLBACK

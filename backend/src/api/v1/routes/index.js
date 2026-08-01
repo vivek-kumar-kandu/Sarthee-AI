@@ -6,6 +6,10 @@ import authRoutes from "../../../modules/auth/auth.routes.js";
 import { createJourneyRouter } from "../../../modules/journey/presentation/routes/journey_routes.js";
 import { adminRouter } from "../../../modules/admin/presentation/routes/admin_routes.js";
 import { emergencyRouter } from "../../../modules/emergency/presentation/routes/emergency_routes.js";
+import { tripPlannerRouter } from "../../../modules/trips/presentation/routes/trip_planner_routes.js";
+import { feedbackRouter } from "../../../modules/feedback/feedback_routes.js";
+
+
 
 
 /**
@@ -124,6 +128,20 @@ router.use("/admin", adminRouter);
  * GET /api/v1/emergency, POST /api/v1/emergency/sos
  */
 router.use("/emergency", emergencyRouter);
+
+/**
+ * AI Trip Planner & Itinerary Optimizer Engine
+ * POST /api/v1/trips/plan, POST /api/v1/trips/save, GET /api/v1/trips, POST /api/v1/trips/:id/recalculate
+ */
+router.use("/trips", tripPlannerRouter);
+
+/**
+ * Beta User Feedback Endpoint
+ * POST /api/v1/feedback, GET /api/v1/feedback
+ */
+router.use("/feedback", feedbackRouter);
+
+
 
 
 // ============================================================================
