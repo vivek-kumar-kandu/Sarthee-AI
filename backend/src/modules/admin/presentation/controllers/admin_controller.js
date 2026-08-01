@@ -1,6 +1,6 @@
-import { dashboardService } from '../domain/services/dashboard_service.js';
-import { providerHealthService } from '../domain/services/provider_health_service.js';
-import { analyticsService } from '../domain/services/analytics_service.js';
+import { dashboardService } from '../../domain/services/dashboard_service.js';
+import { providerHealthService } from '../../domain/services/provider_health_service.js';
+import { analyticsService } from '../../domain/services/analytics_service.js';
 import { osrmCircuitBreaker, weatherCircuitBreaker, openAqCircuitBreaker, evChargingCircuitBreaker } from '../../../../infrastructure/providers/real_providers.js';
 import { logger } from '../../../../config/logger.js';
 
