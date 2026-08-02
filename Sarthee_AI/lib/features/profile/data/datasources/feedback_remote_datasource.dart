@@ -1,19 +1,16 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception_mapper.dart';
 import '../../../../core/network/api_response.dart';
 
-/**
- * FeedbackRemoteDataSource — Production Feedback REST Datasource
- *
- * Connects Beta User Feedback submission form to Express backend API gateway (/api/v1/feedback).
- */
+/// FeedbackRemoteDataSource — Production Feedback REST Datasource
+///
+/// Connects Beta User Feedback submission form to Express backend API gateway (/api/v1/feedback).
 class FeedbackRemoteDataSource {
-  const FeedbackRemoteDataSource({ApiClient? client}) : _client = client;
+  const FeedbackRemoteDataSource({this.client});
 
-  final ApiClient? _client;
+  final ApiClient? client;
 
-  ApiClient get client => _client ?? ApiClient.instance;
+  ApiClient get apiClient => client ?? ApiClient.instance;
 
   Future<ApiResponse<Map<String, dynamic>>> submitFeedback({
     int rating = 5,
@@ -24,7 +21,7 @@ class FeedbackRemoteDataSource {
     String comments = '',
   }) async {
     try {
-      final response = await client.dio.post(
+      final response = await apiClient.dio.post(
         '/feedback',
         data: {
           'rating': rating,

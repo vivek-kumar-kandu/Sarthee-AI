@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception_mapper.dart';
 import '../../../core/network/api_response.dart';
@@ -6,11 +5,11 @@ import '../models/location_model.dart';
 import '../models/nearby_place.dart';
 
 class PlacesService {
-  const PlacesService({ApiClient? client}) : _client = client;
+  const PlacesService({this.client});
 
-  final ApiClient? _client;
+  final ApiClient? client;
 
-  ApiClient get client => _client ?? ApiClient.instance;
+  ApiClient get apiClient => client ?? ApiClient.instance;
 
   Future<ApiResponse<List<NearbyPlace>>> getNearbyPlaces(
     LocationModel location, {
@@ -18,7 +17,7 @@ class PlacesService {
     int radius = 5000,
   }) async {
     try {
-      final response = await client.dio.get(
+      final response = await apiClient.dio.get(
         '/nearby',
         queryParameters: {
           'lat': location.latitude,
@@ -65,7 +64,7 @@ class PlacesService {
     double lng = 75.7873,
   }) async {
     try {
-      final response = await client.dio.get(
+      final response = await apiClient.dio.get(
         '/nearby',
         queryParameters: {
           'lat': lat,

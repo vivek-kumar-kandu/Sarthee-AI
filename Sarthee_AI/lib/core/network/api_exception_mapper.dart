@@ -1,11 +1,9 @@
 import 'package:dio/dio.dart';
 
-/**
- * ApiExceptionMapper — Central Dio & Network Exception Mapper
- *
- * Converts Dio HTTP errors (Timeout, No Internet, 401 Unauthorized, 404, 500)
- * into typed AppException objects for consistent UI error rendering.
- */
+/// ApiExceptionMapper — Central Dio & Network Exception Mapper
+///
+/// Converts Dio HTTP errors (Timeout, No Internet, 401 Unauthorized, 404, 500)
+/// into typed AppException objects for consistent UI error rendering.
 abstract class AppException implements Exception {
   const AppException(this.message, {this.code = 'APP_ERROR', this.statusCode});
 
@@ -18,28 +16,27 @@ abstract class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  const NetworkException([String message = 'No internet connection. Please check your network.'])
-      : super(message, code: 'NO_INTERNET');
+  const NetworkException([super.message = 'No internet connection. Please check your network.'])
+      : super(code: 'NO_INTERNET');
 }
 
 class TimeoutException extends AppException {
-  const TimeoutException([String message = 'Request timed out. Please try again.'])
-      : super(message, code: 'TIMEOUT');
+  const TimeoutException([super.message = 'Request timed out. Please try again.'])
+      : super(code: 'TIMEOUT');
 }
 
 class ServerException extends AppException {
-  const ServerException(String message, {int? statusCode, String code = 'SERVER_ERROR'})
-      : super(message, code: code, statusCode: statusCode);
+  const ServerException(super.message, {super.statusCode, super.code = 'SERVER_ERROR'});
 }
 
 class UnauthorizedException extends AppException {
-  const UnauthorizedException([String message = 'Session expired. Please sign in again.'])
-      : super(message, code: 'UNAUTHORIZED', statusCode: 401);
+  const UnauthorizedException([super.message = 'Session expired. Please sign in again.'])
+      : super(code: 'UNAUTHORIZED', statusCode: 401);
 }
 
 class NotFoundException extends AppException {
-  const NotFoundException([String message = 'Requested resource not found.'])
-      : super(message, code: 'NOT_FOUND', statusCode: 404);
+  const NotFoundException([super.message = 'Requested resource not found.'])
+      : super(code: 'NOT_FOUND', statusCode: 404);
 }
 
 class ApiExceptionMapper {

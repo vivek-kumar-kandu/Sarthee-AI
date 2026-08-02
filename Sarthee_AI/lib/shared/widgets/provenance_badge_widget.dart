@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_response.dart';
 
-/**
- * ProvenanceBadgeWidget — Visual Data Provenance UI Component
- *
- * Renders clear provider transparency badges matching the "Never Fake Real-Time" principle:
- *
- * 🟢 Live (Provider Name)
- * 🔵 Scheduled (Static Timetable)
- * 🟡 Cached (LRU / Redis)
- * ⚪ Offline / Fallback
- */
+/// ProvenanceBadgeWidget — Visual Data Provenance UI Component
+///
+/// Renders clear provider transparency badges matching the "Never Fake Real-Time" principle:
+///
+/// 🟢 Live (Provider Name)
+/// 🔵 Scheduled (Static Timetable)
+/// 🟡 Cached (LRU / Redis)
+/// ⚪ Offline / Fallback
 class ProvenanceBadgeWidget extends StatelessWidget {
   const ProvenanceBadgeWidget({
     required this.provenance,
@@ -58,9 +56,9 @@ class ProvenanceBadgeWidget extends StatelessWidget {
         vertical: compact ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.12),
+        color: badgeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: badgeColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

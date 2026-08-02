@@ -1,19 +1,16 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception_mapper.dart';
 import '../../../../core/network/api_response.dart';
 
-/**
- * EmergencyRemoteDataSource — Production Emergency REST Datasource
- *
- * Connects 24x7 Emergency SOS alert dispatch to Express backend API gateway (/api/v1/emergency/sos).
- */
+/// EmergencyRemoteDataSource — Production Emergency REST Datasource
+///
+/// Connects 24x7 Emergency SOS alert dispatch to Express backend API gateway (/api/v1/emergency/sos).
 class EmergencyRemoteDataSource {
-  const EmergencyRemoteDataSource({ApiClient? client}) : _client = client;
+  const EmergencyRemoteDataSource({this.client});
 
-  final ApiClient? _client;
+  final ApiClient? client;
 
-  ApiClient get client => _client ?? ApiClient.instance;
+  ApiClient get apiClient => client ?? ApiClient.instance;
 
   Future<ApiResponse<Map<String, dynamic>>> dispatchSos({
     required double lat,
@@ -22,7 +19,7 @@ class EmergencyRemoteDataSource {
     List<String> emergencyContacts = const [],
   }) async {
     try {
-      final response = await client.dio.post(
+      final response = await apiClient.dio.post(
         '/emergency/sos',
         data: {
           'lat': lat,

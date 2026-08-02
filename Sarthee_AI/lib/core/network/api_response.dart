@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-/**
- * ApiResponse — Production Generic API Envelope Wrapper for Flutter
- *
- * Deserializes backend status, data payload, error details, and metadata
- * featuring DataProvenance, Request ID, and Trace ID.
- */
+/// ApiResponse — Production Generic API Envelope Wrapper for Flutter
+///
+/// Deserializes backend status, data payload, error details, and metadata
+/// featuring DataProvenance, Request ID, and Trace ID.
 @immutable
 class ApiResponse<T> {
   const ApiResponse({

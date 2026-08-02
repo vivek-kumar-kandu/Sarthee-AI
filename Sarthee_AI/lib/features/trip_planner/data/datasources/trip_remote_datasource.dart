@@ -1,19 +1,16 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_exception_mapper.dart';
 import '../../../../core/network/api_response.dart';
 
-/**
- * TripRemoteDataSource — Production Trip Planner REST Datasource
- *
- * Connects Multi-Day Trip Planning solver and Saved Trips list to Express backend API gateway (/api/v1/trips).
- */
+/// TripRemoteDataSource — Production Trip Planner REST Datasource
+///
+/// Connects Multi-Day Trip Planning solver and Saved Trips list to Express backend API gateway (/api/v1/trips).
 class TripRemoteDataSource {
-  const TripRemoteDataSource({ApiClient? client}) : _client = client;
+  const TripRemoteDataSource({this.client});
 
-  final ApiClient? _client;
+  final ApiClient? client;
 
-  ApiClient get client => _client ?? ApiClient.instance;
+  ApiClient get apiClient => client ?? ApiClient.instance;
 
   Future<ApiResponse<Map<String, dynamic>>> planTrip({
     required String rawPrompt,
@@ -24,7 +21,7 @@ class TripRemoteDataSource {
     Map<String, dynamic> dynamicConstraints = const {},
   }) async {
     try {
-      final response = await client.dio.post(
+      final response = await apiClient.dio.post(
         '/trips/plan',
         data: {
           'rawPrompt': rawPrompt,
@@ -48,7 +45,7 @@ class TripRemoteDataSource {
 
   Future<ApiResponse<Map<String, dynamic>>> fetchSavedTrips() async {
     try {
-      final response = await client.dio.get('/trips');
+      final response = await apiClient.dio.get('/trips');
       final json = response.data as Map<String, dynamic>;
       return ApiResponse.fromJson(
         json,
@@ -61,7 +58,7 @@ class TripRemoteDataSource {
 
   Future<ApiResponse<Map<String, dynamic>>> fetchTripById(String tripId) async {
     try {
-      final response = await client.dio.get('/trips/$tripId');
+      final response = await apiClient.dio.get('/trips/$tripId');
       final json = response.data as Map<String, dynamic>;
       return ApiResponse.fromJson(
         json,
