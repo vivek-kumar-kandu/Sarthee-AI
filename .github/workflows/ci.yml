@@ -45,8 +45,8 @@ jobs:
 
       - name: Install Flutter Dependencies
         run: flutter pub get
-        working-directory: Sarthe_AI
+        working-directory: Sarthee_AI
 
       - name: Run Flutter Static Analysis
-        run: flutter analyze lib/features/nearby
-        working-directory: Sarthe_AI
+        run: flutter analyze
+        working-directory: Sarthee_AI
