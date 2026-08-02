@@ -8,6 +8,8 @@ import {
 } from '../../../../infrastructure/providers/nearby/nearby_osm_providers.js';
 import { NearbyDTO } from '../../application/dto/nearby_dto.js';
 import { logger } from '../../../../config/logger.js';
+import { ResponseBuilder } from '../../../../common/responses/response_builder.js';
+import { DataProvenance, CONFIDENCE_TIERS } from '../../../../infrastructure/providers/data_provenance.js';
 import nearbyConfig from '../../../../config/nearby.json' with { type: 'json' };
 
 // ── Build registry singleton ─────────────────────────────────────────────────
@@ -24,14 +26,6 @@ const orchestrator = new NearbyOrchestrator(registry);
  * NearbyController
  *
  * GET /api/v1/nearby?lat=&lng=&category=&radius=&limit=&query=
- *
- * Request Params:
- *   lat      {number} Required. User latitude.
- *   lng      {number} Required. User longitude.
- *   category {string} Optional. 'heritage'|'food'|'hotels'|'emergency'|'all' (default: 'all')
- *   radius   {number} Optional. Search radius in meters (default: 5000, max: 15000)
- *   limit    {number} Optional. Max results per category (default: 20, max: 50)
- *   query    {string} Optional. Search query string (e.g. "Veg restaurant near me")
  */
 export const getNearbyPlaces = async (req, res) => {
   const startTime = Date.now();
@@ -42,26 +36,29 @@ export const getNearbyPlaces = async (req, res) => {
     const lng = parseFloat(req.query.lng);
 
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      return res.status(400).json({
-        error: 'INVALID_PARAMS',
+      return ResponseBuilder.error(res, {
+        code: 'INVALID_PARAMS',
         message: 'lat and lng are required numeric query parameters.',
-        example: '/api/v1/nearby?lat=26.9124&lng=75.7873&category=heritage&radius=5000',
+        statusCode: 400,
+        details: { example: '/api/v1/nearby?lat=26.9124&lng=75.7873&category=heritage&radius=5000' },
       });
     }
 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      return res.status(400).json({
-        error: 'INVALID_PARAMS',
+      return ResponseBuilder.error(res, {
+        code: 'INVALID_PARAMS',
         message: 'lat must be -90..90 and lng must be -180..180.',
+        statusCode: 400,
       });
     }
 
     const category = req.query.category?.toLowerCase() || 'all';
     const validCategories = [...nearbyConfig.categories, 'all'];
     if (!validCategories.includes(category)) {
-      return res.status(400).json({
-        error: 'INVALID_PARAMS',
+      return ResponseBuilder.error(res, {
+        code: 'INVALID_PARAMS',
         message: `Invalid category "${category}". Supported: ${validCategories.join(', ')}`,
+        statusCode: 400,
       });
     }
 
@@ -91,18 +88,33 @@ export const getNearbyPlaces = async (req, res) => {
 
     // ── DTO Mapping ─────────────────────────────────────────────────────────
     const responseBody = NearbyDTO.toApiResponse(rankedPois, context, searchIntent);
+    const latencyMs = Date.now() - startTime;
+
+    const provenance = DataProvenance.live('Overpass OSM', {
+      confidence: CONFIDENCE_TIERS.LIVE_PROCESSED,
+      latencyMs,
+      cache: false,
+      verified: true,
+      providerVersion: 'v0.7.55',
+    });
 
     logger.info({
       event: 'nearby_request_success',
-      requestId: context.requestId,
+      requestId: req.id || context.requestId,
       lat,
       lng,
       category: context.category,
       resultCount: rankedPois.length,
-      elapsedMs: Date.now() - startTime,
+      elapsedMs: latencyMs,
     });
 
-    return res.status(200).json(responseBody);
+    return ResponseBuilder.success(res, {
+      data: responseBody.data,
+      provenance,
+      statusCode: 200,
+      requestId: req.id || context.requestId,
+      traceId: req.traceId,
+    });
   } catch (err) {
     logger.error({
       event: 'nearby_request_error',
@@ -110,9 +122,10 @@ export const getNearbyPlaces = async (req, res) => {
       stack: err.stack,
     });
 
-    return res.status(500).json({
-      error: 'SERVER_ERROR',
+    return ResponseBuilder.error(res, {
+      code: 'SERVER_ERROR',
       message: 'An unexpected error occurred while fetching nearby places.',
+      statusCode: 500,
     });
   }
 };

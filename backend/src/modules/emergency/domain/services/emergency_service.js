@@ -1,15 +1,17 @@
 import { EmergencyRegistry } from '../../../../infrastructure/providers/registry/emergency_registry.js';
 import { sosDispatcher } from './sos_dispatcher.js';
+import { emergencyRepository } from '../../infrastructure/database/emergency_repository.js';
 
 /**
  * EmergencyService
  *
- * Orchestrates emergency safety lookups and 24x7 SOS dispatches.
+ * Orchestrates emergency safety lookups, 24x7 SOS dispatches, and persistence.
  */
 export class EmergencyService {
-  constructor(registry = new EmergencyRegistry(), dispatcher = sosDispatcher) {
+  constructor(registry = new EmergencyRegistry(), dispatcher = sosDispatcher, repository = emergencyRepository) {
     this.registry = registry;
     this.dispatcher = dispatcher;
+    this.repository = repository;
   }
 
   /**
@@ -20,7 +22,7 @@ export class EmergencyService {
   }
 
   /**
-   * Dispatches 24x7 emergency SOS alert
+   * Dispatches 24x7 emergency SOS alert and persists dispatch log
    */
   async dispatchSos(params) {
     const { lat, lng, userId, emergencyContacts } = params;
@@ -28,7 +30,7 @@ export class EmergencyService {
     const hospitals = await this.registry.fetchEmergencyServices(lat, lng, 'hospital');
     const police = await this.registry.fetchEmergencyServices(lat, lng, 'police');
 
-    return this.dispatcher.generateSosPayload({
+    const sosPayload = this.dispatcher.generateSosPayload({
       lat,
       lng,
       userId,
@@ -36,6 +38,10 @@ export class EmergencyService {
       nearestPolice: police[0] || null,
       nearestHospital: hospitals[0] || null,
     });
+
+    await this.repository.save(sosPayload);
+
+    return sosPayload;
   }
 }
 

@@ -1,13 +1,18 @@
 import { logger } from '../../config/logger.js';
+import { feedbackRepository } from './infrastructure/database/feedback_repository.js';
+import { memoryFeedbackRepository } from './infrastructure/database/memory_feedback_repository.js';
+import { ResponseBuilder } from '../../common/responses/response_builder.js';
+import { DataProvenance, CONFIDENCE_TIERS } from '../../infrastructure/providers/data_provenance.js';
 
-/** In-memory storage for Beta User Feedback */
-export const memoryFeedbackStore = [];
+/** In-memory storage export for backward compatibility */
+export const memoryFeedbackStore = memoryFeedbackRepository.store;
 
 /**
  * POST /api/v1/feedback
  * Collects 5-star ratings, Journey/Nearby accuracy feedback, and bug reports
  */
 export const submitFeedback = async (req, res) => {
+  const startTime = Date.now();
   try {
     const {
       rating = 5,
@@ -32,7 +37,7 @@ export const submitFeedback = async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
-    memoryFeedbackStore.push(feedbackEntry);
+    await feedbackRepository.save(feedbackEntry);
 
     logger.info({
       event: 'beta_feedback_submitted',
@@ -41,14 +46,22 @@ export const submitFeedback = async (req, res) => {
       category,
     });
 
-    return res.status(201).json({
-      success: true,
-      message: 'Thank you for your feedback! Your insights help improve Sarthee AI.',
+    const provenance = DataProvenance.live('Beta Feedback API', {
+      confidence: CONFIDENCE_TIERS.LIVE_PROCESSED,
+      latencyMs: Date.now() - startTime,
+    });
+
+    return ResponseBuilder.success(res, {
       data: feedbackEntry,
+      provenance,
+      message: 'Thank you for your feedback! Your insights help improve Sarthee AI.',
+      statusCode: 201,
+      requestId: req.id,
+      traceId: req.traceId,
     });
   } catch (err) {
     logger.error({ event: 'submit_feedback_error', error: err.message });
-    return res.status(500).json({ error: 'SERVER_ERROR', message: 'Failed to record feedback.' });
+    return ResponseBuilder.error(res, { code: 'SERVER_ERROR', message: 'Failed to record feedback.', statusCode: 500 });
   }
 };
 
@@ -57,18 +70,32 @@ export const submitFeedback = async (req, res) => {
  * Returns summary of beta feedback (Admin access)
  */
 export const getFeedbackSummary = async (req, res) => {
+  const startTime = Date.now();
   try {
-    const total = memoryFeedbackStore.length;
-    const avgRating = total > 0 ? memoryFeedbackStore.reduce((acc, f) => acc + f.rating, 0) / total : 5.0;
+    const feedbackList = await feedbackRepository.findAll();
+    const stats = await feedbackRepository.getStatistics();
 
-    return res.status(200).json({
-      success: true,
-      totalFeedbackEntries: total,
-      averageRating: Math.round(avgRating * 10) / 10,
-      feedbackList: memoryFeedbackStore,
+    const provenance = DataProvenance.live('Feedback Analytics Engine', {
+      confidence: CONFIDENCE_TIERS.LIVE_PROCESSED,
+      latencyMs: Date.now() - startTime,
+    });
+
+    return ResponseBuilder.success(res, {
+      data: {
+        totalFeedbackEntries: stats.totalEntries,
+        averageRating: stats.averages.overall,
+        averages: stats.averages,
+        categoryCounts: stats.categoryCounts,
+        ratingDistribution: stats.ratingDistribution,
+        feedbackList,
+      },
+      provenance,
+      statusCode: 200,
+      requestId: req.id,
+      traceId: req.traceId,
     });
   } catch (err) {
     logger.error({ event: 'get_feedback_summary_error', error: err.message });
-    return res.status(500).json({ error: 'SERVER_ERROR', message: 'Failed to fetch feedback summary.' });
+    return ResponseBuilder.error(res, { code: 'SERVER_ERROR', message: 'Failed to fetch feedback summary.', statusCode: 500 });
   }
 };

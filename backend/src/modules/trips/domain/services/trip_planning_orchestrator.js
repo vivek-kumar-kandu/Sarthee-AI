@@ -4,13 +4,14 @@ import { TripAdvisorService } from './trip_advisor_service.js';
 import { TripReOptimizerService } from './trip_reoptimizer_service.js';
 import { TripContext } from '../value_objects/trip_context.js';
 import { TripEntity, TRIP_STATES } from '../entities/trip_entity.js';
+import { tripRepository } from '../../infrastructure/database/trip_repository.js';
+import { memoryTripRepository } from '../../infrastructure/database/memory_trip_repository.js';
 import { logger } from '../../../../config/logger.js';
 
 /**
- * In-Memory Trip Store (Zero MongoDB dependency)
- * Stores saved & active user trips in memory
+ * In-Memory Trip Store export for backwards compatibility
  */
-export const memoryTripStore = new Map();
+export const memoryTripStore = memoryTripRepository.store;
 
 /**
  * TripPlanningOrchestrator
@@ -22,7 +23,7 @@ export const memoryTripStore = new Map();
  *   4. Build multi-phase timeline slots & automatic 5-15 min buffers
  *   5. Compute granular cost breakdown & dynamic runtime confidence %
  *   6. Generate grounded AI explanation via TripAdvisorService
- *   7. Assemble & store TripEntity (In-Memory, Zero MongoDB)
+ *   7. Assemble & store TripEntity via TripRepository (Mongo + Memory Failover)
  */
 export class TripPlanningOrchestrator {
   constructor(options = {}) {
@@ -30,6 +31,7 @@ export class TripPlanningOrchestrator {
     this.optimizationEngine = options.optimizationEngine || new ItineraryOptimizationEngine();
     this.advisorService = options.advisorService || new TripAdvisorService();
     this.reoptimizerService = options.reoptimizerService || new TripReOptimizerService(this.optimizationEngine);
+    this.repository = options.repository || tripRepository;
   }
 
   /**
@@ -101,8 +103,8 @@ export class TripPlanningOrchestrator {
     const aiAdvice = await this.advisorService.generateTripAdvice(trip, context);
     trip.aiAdvice = aiAdvice;
 
-    // 6. Store in In-Memory Trip Store
-    memoryTripStore.set(trip.id, trip);
+    // 6. Store in Repository (MongoDB Atlas / In-Memory Failover)
+    await this.repository.save(trip);
 
     logger.info({
       event: 'trip_plan_complete',
@@ -120,15 +122,20 @@ export class TripPlanningOrchestrator {
    * Recalculates remaining stops for an active trip
    */
   async recalculateTrip(tripId, params) {
-    const trip = memoryTripStore.get(tripId);
+    let trip = await this.repository.findById(tripId);
     if (!trip) {
       throw new Error(`Trip with ID "${tripId}" not found.`);
+    }
+
+    // Convert raw document to TripEntity instance if needed
+    if (!(trip instanceof TripEntity)) {
+      trip = new TripEntity(trip);
     }
 
     const reoptimized = this.reoptimizerService.reoptimizeTrip(trip, params);
     trip.days = reoptimized.days;
     trip.updatedAt = new Date().toISOString();
-    memoryTripStore.set(trip.id, trip);
+    await this.repository.save(trip);
 
     return { trip, reoptimization: reoptimized };
   }
