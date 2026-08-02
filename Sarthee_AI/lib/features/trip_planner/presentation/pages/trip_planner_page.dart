@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/widgets/provenance_badge_widget.dart';
 import '../controllers/trip_planner_provider.dart';
+import '../widgets/itinerary_card.dart';
+
 
 class TripPlannerPage extends ConsumerStatefulWidget {
   const TripPlannerPage({super.key});
@@ -227,20 +229,9 @@ class _TripPlannerPageState extends ConsumerState<TripPlannerPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF4F46E5).withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    state.planResponse!.data.toString(),
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
+                ItineraryCard(data: state.planResponse!.data),
                 const SizedBox(height: 24),
+
               ],
 
               // Saved Trips Section
