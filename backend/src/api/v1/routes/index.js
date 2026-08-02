@@ -8,6 +8,8 @@ import { adminRouter } from "../../../modules/admin/presentation/routes/admin_ro
 import { emergencyRouter } from "../../../modules/emergency/presentation/routes/emergency_routes.js";
 import { tripPlannerRouter } from "../../../modules/trips/presentation/routes/trip_planner_routes.js";
 import { feedbackRouter } from "../../../modules/feedback/feedback_routes.js";
+import { nearbyRouter } from "../../../modules/nearby/presentation/routes/nearby_routes.js";
+
 
 
 
@@ -140,6 +142,13 @@ router.use("/trips", tripPlannerRouter);
  * POST /api/v1/feedback, GET /api/v1/feedback
  */
 router.use("/feedback", feedbackRouter);
+
+/**
+ * Nearby POI Discovery Engine
+ * GET /api/v1/nearby?lat=&lng=&category=&radius=&limit=&query=
+ */
+router.use("/nearby", nearbyRouter);
+
 
 
 

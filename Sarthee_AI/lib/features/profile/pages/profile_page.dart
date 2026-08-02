@@ -12,6 +12,9 @@ import '../widgets/profile_completion_banner.dart';
 import '../widgets/profile_insight_card.dart';
 import '../widgets/profile_passport_card.dart';
 import '../widgets/profile_summary_widget.dart';
+import '../presentation/widgets/feedback_bottom_sheet.dart';
+
+
 
 /// Main My Profile Screen featuring Travel Passport Card, Completion Banner, & Menu Shortcuts.
 class ProfilePage extends ConsumerStatefulWidget {
@@ -210,6 +213,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           onTap: () {},
                         ),
                         _buildMenuTile(
+                          icon: Icons.feedback_outlined,
+                          title: 'Send Beta Feedback',
+                          subtitle: 'Report issues or share suggestions',
+                          iconColor: const Color(0xFF4F46E5),
+                          onTap: () => FeedbackBottomSheet.show(context),
+                        ),
+                        _buildMenuTile(
                           icon: Icons.logout_rounded,
                           title: 'Logout',
                           subtitle: 'Sign out from Sarthee AI',
@@ -217,6 +227,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           textColor: const Color(0xFFDC2626),
                           onTap: _showLogoutDialog,
                         ),
+
 
                         const SizedBox(height: 32),
                       ],

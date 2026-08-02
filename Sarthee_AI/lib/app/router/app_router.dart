@@ -26,6 +26,10 @@ import '../../features/smart_journey/presentation/pages/smart_journey_planner_pa
 import '../../features/smart_journey/presentation/pages/journey_details_page.dart';
 import '../../features/smart_journey/presentation/pages/active_journey_guide_page.dart';
 import '../../features/smart_journey/domain/entities/journey_plan.dart';
+import '../../features/trip_planner/presentation/pages/trip_planner_page.dart';
+import '../../features/safety/presentation/pages/emergency_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+
 
 // =============================================================================
 // SARTHEE AI — APPLICATION ROUTER
@@ -438,13 +442,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             navigatorKey: tripsNavigatorKey,
             routes: <RouteBase>[
-              _buildRoute(
+              GoRoute(
                 path: RoutePaths.tripPlanner,
                 name: RouteNames.tripPlanner,
-                title: 'Trip Planner',
-                subtitle: 'Build your perfect journey',
-                icon: Icons.route_rounded,
+                pageBuilder: (BuildContext context, GoRouterState state) {
+                  return _buildAdaptivePage<void>(
+                    state: state,
+                    child: const TripPlannerPage(),
+                  );
+                },
               ),
+
 
               _buildRoute(
                 path: RoutePaths.navigation,
@@ -555,13 +563,39 @@ StatefulShellBranch(
         icon: Icons.notifications_rounded,
       ),
 
-      _buildRoute(
+      GoRoute(
         path: RoutePaths.safety,
         name: RouteNames.safety,
-        title: 'Safety',
-        subtitle: 'Emergency and travel safety tools',
-        icon: Icons.health_and_safety_rounded,
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const EmergencyPage(),
+          );
+        },
       ),
+
+      GoRoute(
+        path: RoutePaths.emergency,
+        name: RouteNames.emergency,
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const EmergencyPage(),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/admin',
+        name: 'adminDashboard',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          return _buildAdaptivePage<void>(
+            state: state,
+            child: const AdminDashboardPage(),
+          );
+        },
+      ),
+
 
       _buildRoute(
         path: RoutePaths.budget,
