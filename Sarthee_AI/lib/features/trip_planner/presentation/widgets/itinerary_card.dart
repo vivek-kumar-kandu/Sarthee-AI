@@ -66,9 +66,10 @@ class ItineraryCard extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.extrabold,
+                          fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : const Color(0xFF1E1B4B),
                         ),
+
                       ),
                     ),
                     Container(

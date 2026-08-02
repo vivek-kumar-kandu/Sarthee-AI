@@ -229,7 +229,8 @@ class _TripPlannerPageState extends ConsumerState<TripPlannerPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                ItineraryCard(data: state.planResponse!.data),
+                ItineraryCard(data: state.planResponse!.data ?? const <String, dynamic>{}),
+
                 const SizedBox(height: 24),
 
               ],
